@@ -1,0 +1,85 @@
+/* 技术介绍模块样式 */
+.tech-intro-container {
+    width: 900px;
+    margin-top: 3rem;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tech-nav {
+    background: #f8f9fa;
+    padding: 1.5rem;
+}
+
+.nav-list {
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+    background: #e9ecef;
+}
+
+.nav-item.active {
+    border-left-color: #5F9EA0;
+    background: #e9ecef;
+    font-weight: 600;
+}
+
+.tech-content {
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-left: -1px;
+}
+
+.content-item {
+    display: none;
+}
+
+.content-item.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+.content-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.tech-title {
+    font-weight: 700;
+    margin: 0;
+    color: #212529;
+}
+
+.tech-desc {
+    height: 300px;
+    overflow-y: auto;
+    line-height: 1.7;
+    color: #495057;
+}
+
+.fa-code {
+    color: #5F9EA0;
+    font-size: 1.5rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
