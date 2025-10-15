@@ -1,22 +1,20 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>反序列化漏洞利用链检测系统</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/seamless-slider.css">
-    <link rel="stylesheet" href="assets/css/tech-intro.css">
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}GCSCAN - 反序列化漏洞检测平台{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/seamless-slider.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tech-intro.css') }}">
+{% endblock %}
+
+{% block content %}
     <!-- 系统简介 -->
     <section class="section">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6 d-flex justify-content-center ps-lg-4">
-                    <img src="assets/images/1.png" alt="反序列化漏洞检测系统" class="img-fluid rounded shadow w-75">
+                    <img src="{{ url_for('static', filename='images/1.png') }}" alt="反序列化漏洞检测系统" class="img-fluid rounded shadow w-75">
                 </div>
 
                 <div class="col-lg-6 d-flex align-items-center">
@@ -27,7 +25,7 @@
                         <p class="lead fs-5" style="color: var(--text-dark);">
                             Beat Deserialization Risks.
                         </p>
-                        <a href="Analysis.html" class="btn btn-lg mt-3" style="width: 200px; background-color: var(--primary-blue); color: white;">
+                        <a href="{{ url_for('analyze') }}" class="btn btn-lg mt-3" style="width: 200px; background-color: var(--primary-blue); color: white;">
                             Get Started
                         </a>
                     </div>
@@ -131,8 +129,6 @@
         </div>
     </section>
 
-
-
     <!-- 语言支持 -->
     <section class="section">
         <div class="container">
@@ -195,7 +191,7 @@
                             <!-- 右侧图片区域 -->
                             <div class="col-lg-6 slider-image">
                                 <div class="image-frame aspect-16-9">
-                                    <img src="assets/images/1.png" alt="性能统计图表" class="slider-img">
+                                    <img src="{{ url_for('static', filename='images/1.png') }}" alt="性能统计图表" class="slider-img">
                                 </div>
                             </div>
                         </div>
@@ -218,14 +214,13 @@
                             <!-- 右侧图片区域 -->
                             <div class="col-lg-6 slider-image">
                                 <div class="image-frame aspect-16-9">
-                                    <img src="assets/images/1.png" alt="新滑块图片" class="slider-img">
+                                    <img src="{{ url_for('static', filename='images/1.png') }}" alt="新滑块图片" class="slider-img">
                                 </div>
                             </div>
                         </div>
                     </div> 
                 </div>
                 
-                <!-- 添加滑块注意添加导航控制-->
                 <!-- 导航控制 -->
                 <div class="slider-navigation">
                     <button class="nav-btn prev-btn">
@@ -240,7 +235,6 @@
                     </button>
                 </div>
             </div>
-               
         </div>
     </section>
 
@@ -256,7 +250,7 @@
                 <div class="col-lg-3 col-md-4">
                     <div class="team-member-card">
                         <div class="member-avatar">
-                            <img src="assets/images/member1.jpg" alt="团队成员1" class="avatar-img">
+                            <img src="{{ url_for('static', filename='images/member1.jpg') }}" alt="团队成员1" class="avatar-img">
                         </div>
                         <h4>团队成员</h4>
                         <p class="text-muted">职位信息</p>
@@ -268,7 +262,7 @@
                 <div class="col-lg-3 col-md-4">
                     <div class="team-member-card">
                         <div class="member-avatar">
-                            <img src="assets/images/member2.jpg" alt="团队成员2" class="avatar-img">
+                            <img src="{{ url_for('static', filename='images/member2.jpg') }}" alt="团队成员2" class="avatar-img">
                         </div>
                         <h4>团队成员</h4>
                         <p class="text-muted">职位信息</p>
@@ -280,7 +274,7 @@
                 <div class="col-lg-3 col-md-4">
                     <div class="team-member-card">
                         <div class="member-avatar">
-                            <img src="assets/images/member3.jpg" alt="团队成员3" class="avatar-img">
+                            <img src="{{ url_for('static', filename='images/member3.jpg') }}" alt="团队成员3" class="avatar-img">
                         </div>
                         <h4>团队成员</h4>
                         <p class="text-muted">职位信息</p>
@@ -292,7 +286,7 @@
                 <div class="col-lg-3 col-md-4">
                     <div class="team-member-card">
                         <div class="member-avatar">
-                            <img src="assets/images/member4.jpg" alt="团队成员4" class="avatar-img">
+                            <img src="{{ url_for('static', filename='images/member4.jpg') }}" alt="团队成员4" class="avatar-img">
                         </div>
                         <h4>团队成员</h4>
                         <p class="text-muted">职位信息</p>
@@ -304,9 +298,9 @@
             </div>
         </div>
     </section>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/seamless-slider.js"></script>
-    <script src="assets/js/tech-intro.js"></script>
-</body>
-</html>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/seamless-slider.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tech-intro.js') }}"></script>
+{% endblock %}

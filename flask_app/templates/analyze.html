@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}GCSCAN - 文件分析{% endblock %}
+
+{% block content %}
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <!-- 页面标题 -->
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-extrabold text-primary sm:text-4xl">
+                反序列化漏洞利用链检测平台
+            </h1>
+            <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
+                保护您的应用安全，检测潜在风险
+            </p>
+        </div>
+        
+        <!-- 文件上传区域 -->
+        <div class="max-w-3xl mx-auto bg-white rounded-xl card-shadow p-6 sm:p-8">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">文件分析</h2>
+                <p class="mt-2 text-gray-600">上传文件以检测反序列化漏洞</p>
+            </div>
+            
+            <!-- 拖放区域 -->
+            <div class="border-2 border-dashed border-primary/30 rounded-lg p-10 text-center hover:bg-primary/5 transition-colors duration-300">
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                        <i class="fa fa-file-code-o text-2xl text-primary"></i>
+                    </div>
+                    <p class="text-gray-600 mb-2">将文件拖到此处或点击上传</p>
+                    <p class="text-sm text-gray-500 mb-6">支持多种格式，最大不超过100MB</p>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <button class="bg-primary text-white px-5 py-2 rounded-md text-sm font-medium btn-hover">
+                            <i class="fa fa-folder-open mr-1"></i> 选择文件
+                        </button>
+                        
+                        <div class="relative">
+                            <select class="appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-primary">
+                                <option>选择语言（用于检测）</option>
+                                <option>Java</option>
+                                <option>PHP</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fa fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <button class="bg-accent text-white px-5 py-2 rounded-md text-sm font-medium btn-hover">
+                            <i class="fa fa-search mr-1"></i> 上传检测
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最近分析结果 -->
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold text-center text-primary mb-8">最近分析结果</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-xl card-shadow">
+                    <thead>
+                        <tr class="bg-primary/10">
+                            <th class="py-3 px-6 text-left text-sm font-semibold text-primary">文件名</th>
+                            <th class="py-3 px-6 text-left text-sm font-semibold text-primary">语言</th>
+                            <th class="py-3 px-6 text-left text-sm font-semibold text-primary">上传时间</th>
+                            <th class="py-3 px-6 text-left text-sm font-semibold text-primary">状态</th>
+                            <th class="py-3 px-6 text-left text-sm font-semibold text-primary">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="py-4 px-6 text-sm text-gray-900">example.jar</td>
+                            <td class="py-4 px-6 text-sm text-gray-900">Java</td>
+                            <td class="py-4 px-6 text-sm text-gray-500">2023-06-15 14:30</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    已完成
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm">
+                                <a href="#" class="text-primary hover:text-accent mr-3">
+                                    <i class="fa fa-eye mr-1"></i>查看
+                                </a>
+                                <a href="#" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fa fa-download mr-1"></i>下载
+                                </a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="py-4 px-6 text-sm text-gray-900">sample.pkl</td>
+                            <td class="py-4 px-6 text-sm text-gray-900">Python</td>
+                            <td class="py-4 px-6 text-sm text-gray-500">2023-06-15 13:45</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    检测中
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm">
+                                <a href="#" class="text-gray-400 cursor-not-allowed mr-3">
+                                    <i class="fa fa-eye mr-1"></i>查看
+                                </a>
+                                <a href="#" class="text-gray-400 cursor-not-allowed">
+                                    <i class="fa fa-download mr-1"></i>下载
+                                </a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="py-4 px-6 text-sm text-gray-900">test.dll</td>
+                            <td class="py-4 px-6 text-sm text-gray-900">C#</td>
+                            <td class="py-4 px-6 text-sm text-gray-500">2023-06-15 11:20</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    有风险
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm">
+                                <a href="#" class="text-primary hover:text-accent mr-3">
+                                    <i class="fa fa-eye mr-1"></i>查看
+                                </a>
+                                <a href="#" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fa fa-download mr-1"></i>下载
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 模拟文件拖放功能
+    const dropArea = document.querySelector('.border-dashed');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dropArea.classList.add('bg-primary/10');
+        dropArea.classList.add('border-primary');
+    }
+    
+    function unhighlight() {
+        dropArea.classList.remove('bg-primary/10');
+        dropArea.classList.remove('border-primary');
+    }
+    
+    dropArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        // 这里可以添加处理文件的逻辑
+        if (files.length > 0) {
+            alert(`已选择 ${files.length} 个文件`);
+            // 实际应用中可以在这里触发上传
+        }
+    }
+</script>
+{% endblock %}
