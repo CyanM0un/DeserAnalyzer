@@ -9,11 +9,11 @@ def init_db():
     c.execute('''
     CREATE TABLE IF NOT EXISTS results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        file_hash TEXT UNIQUE NOT NULL,  # 文件唯一标识
+        file_hash TEXT UNIQUE NOT NULL,
         filename TEXT NOT NULL,
         language TEXT NOT NULL,
-        analysis_result TEXT,  # 存储分析结果
-        status TEXT DEFAULT 'pending'  # pending/completed/failed
+        analysis_result TEXT,
+        status TEXT DEFAULT 'pending'
     )
     ''')
     conn.commit()

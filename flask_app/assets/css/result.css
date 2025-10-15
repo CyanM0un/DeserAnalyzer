@@ -1,0 +1,31 @@
+/* 布局与通用样式 */
+.page-wrap { min-height: calc(100vh - 8rem); }
+.panel { background: #fff; border-radius: 0.75rem; }
+.graph-toolbar button { margin-right: .5rem; }
+
+/* 兼容样式替代 Tailwind @apply */
+.chip {
+  display: inline-flex; align-items: center; padding: 0.25rem 0.5rem;
+  border-radius: 9999px; font-size: 0.75rem; font-weight: 600;
+  background-color: rgba(20,184,166,0.10); color: #0F766E;
+}
+.list-hover:hover { background-color: rgba(20,184,166,0.06); }
+
+/* 右侧上下两块与左侧底部对齐：第一行自适应，第二行填满剩余 */
+@media (min-width: 1024px) {
+  .two-rows-grid { grid-template-rows: auto 1fr; }
+}
+
+/* 图容器与悬浮提示 */
+#graph {
+  height: 520px;
+  border: 1px dashed rgba(15,118,110,.25);
+  border-radius: .5rem;
+  position: relative;
+}
+#graph-tooltip {
+  position: absolute; z-index: 50; display: none; pointer-events: none;
+  background: #fff; color: #0f172a; border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 0.5rem; padding: 6px 8px; font-size: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15,118,110,0.10), 0 8px 10px -6px rgba(15,118,110,0.06);
+}

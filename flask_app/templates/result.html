@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}分析结果 - GCSCAN{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/result.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-wrap max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-primary">分析结果</h1>
+    <p class="text-gray-600 mt-1">左侧展示函数调用链知识图谱，右侧可切换项目并查看统计。</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 two-rows-grid gap-6 content-auto">
+    <!-- 左侧：知识图谱 -->
+    <div class="lg:col-span-2 lg:row-span-2 panel card-shadow p-4 sm:p-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <h2 id="graph-title" class="text-lg font-semibold text-primary">知识图谱</h2>
+          <span id="graph-meta" class="chip">0 节点 · 0 边</span>
+        </div>
+        <div class="graph-toolbar flex items-center gap-2">
+          <label for="chain-select" class="text-sm text-gray-600">显示</label>
+          <select id="chain-select" class="appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-1.5 px-2 pr-7 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-primary text-sm">
+            <option value="all">全部链路</option>
+          </select>
+          <button id="fit-btn" class="bg-primary text-white px-3 py-1.5 rounded-md text-sm btn-hover"><i class="fa fa-compress"></i> 适配</button>
+          <button id="focus-entry-btn" class="bg-accent text-white px-3 py-1.5 rounded-md text-sm btn-hover"><i class="fa fa-bullseye"></i> 聚焦入口</button>
+        </div>
+      </div>
+      <div id="graph" class="w-full"></div>
+      <div id="graph-tooltip"></div>
+      <div class="mt-3 text-xs text-gray-500">提示：悬停节点显示完整签名，滚轮缩放，拖拽平移。</div>
+    </div>
+
+    <!-- 右侧：项目列表 -->
+    <div class="lg:col-span-1 lg:row-span-1 panel card-shadow p-4 sm:p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base font-semibold text-primary"><i class="fa fa-folder-open mr-1"></i> 已分析项目</h3>
+        <span id="project-count" class="chip">0 个</span>
+      </div>
+      <div id="project-list" class="divide-y divide-gray-100"></div>
+    </div>
+
+    <!-- 右侧：统计图表 -->
+    <div class="lg:col-span-1 lg:row-span-1 panel card-shadow p-4 sm:p-5">
+      <h3 class="text-base font-semibold text-primary mb-3"><i class="fa fa-chart-pie mr-1"></i> 统计分析</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+        <div class="bg-white rounded-md p-2 flex items-center justify-center">
+          <canvas id="pieChart" class="w-full" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-md p-2 flex items-center justify-center">
+          <canvas id="barChart" class="w-full" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 第三方库（CDN） -->
+<script src="https://unpkg.com/vis-network@9.1.6/dist/vis-network.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/vis-network@9.1.6/dist/vis-network.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- 后端注入的数据 -->
+<script id="projects-json" type="application/json">{% if projects is defined %}{{ projects | tojson | safe }}{% endif %}</script>
+
+<!-- 业务脚本 -->
+<script src="{{ url_for('static', filename='js/result.js') }}"></script>
+{% endblock %}
