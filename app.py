@@ -24,6 +24,10 @@ def index():
 def index_html():
     return render_template('index.html')
 
+@app.route('/result')
+def result():
+    return render_template('result.html')
+
 @app.route("/analyze", methods=["GET", "POST"])
 def analyze():
    if request.method == "POST":
@@ -47,7 +51,7 @@ def analyze():
         if lang == "Java":
             save_path = os.path.join(JAVA_DIR, filename)
             save_file(uploaded, save_path)
-            flash(f"Java JAR 已上传：{filename}")
+            flash(f"{filename} 已开始分析")
             return redirect(url_for("analyze"))
 
         if lang == "PHP":
@@ -64,7 +68,7 @@ def analyze():
             if not ok:
                 flash(f"解压失败：{err}")
                 return redirect(url_for("analyze"))
-            flash(f"PHP 项目上传并解压成功")
+            flash(f"{filename} 已开始分析")
             return redirect(url_for("analyze"))
 
    return render_template("analyze.html")

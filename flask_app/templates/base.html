@@ -66,8 +66,8 @@
                         <a href="{{ url_for('analyze') }}" class="{% if request.endpoint == 'analyze' %}border-primary text-primary{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             分析
                         </a>
-                        <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            文档
+                        <a href="{{ url_for('result') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            结果
                         </a>
                         <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             关于
@@ -81,7 +81,7 @@
                     <a href="{{ url_for('index') }}" class="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium btn-hover">
                         <i class="fa fa-home mr-1"></i> 返回主页
                     </a>
-                    {% else %}
+                    {% elif request.endpoint == 'index' %}
                     <a href="{{ url_for('analyze') }}" class="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium btn-hover">
                         <i class="fa fa-search mr-1"></i> 开始分析
                     </a>
