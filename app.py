@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 from utils import *
 from database import *
 import threading
 import os
 import re
+import subprocess
+import json
 
 # 以当前文件位置为根目录，避免相对路径问题
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -27,8 +29,45 @@ app = Flask(__name__, static_url_path='/assets',
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = "GCSCAN"
 
-def gc_scan(path, lang):
-    pass
+def get_gc_php(gc_file):
+    gcs = []
+    with open(gc_file, "r", encoding="utf-8") as f:
+        contents = f.readlines()
+    
+    for content in contents: # TODO 增加更多信息
+        gc = {}
+        temp = json.loads(content)
+        gc["gc_stack"] = temp['funcStack']
+        gcs.append(gc)
+
+    return gcs
+
+def gc_scan_php(target, hash, filename):
+    tool_dir = os.path.join(ROOT_DIR, "tools", "php", "PFortifier")
+    run_cmd = ["python", "Main.py"]
+    os.environ['PHP_PROG_ROOT'] = target
+
+    result = subprocess.run(run_cmd, cwd=tool_dir, capture_output=True, text=True)
+    
+    print(result.stdout)
+    if result.stderr:
+        print("Error:", result.stderr)
+
+    results_dir = os.path.join(tool_dir, 'result')
+    for result_dir in os.listdir(results_dir):
+        if hash in result_dir: # result
+            gc_file = os.path.join(results_dir, result_dir, "pop_chains.json")
+            gcs = get_gc_php(gc_file)
+    
+    # 数据库导入
+    if gcs is not None:
+        gcs_str = json.dumps(gcs)
+        db_finish_analyze(hash, gcs_str)
+        print(f"{filename} finished analysis")
+
+def gc_scan(file_path, project_path, lang, hash, file_name):
+    if lang == "PHP":
+        gc_scan_php(project_path, hash, file_name)
 
 @app.route('/')
 def index():
@@ -192,27 +231,25 @@ def analyze():
         if lang == "PHP":
             save_path = os.path.join(PHP_DIR, filename)
             save_file(uploaded, save_path)
-            extract_dest = os.path.join(PHP_DIR)
+            extract_dest = os.path.join(PHP_DIR, file_hash)
             os.makedirs(extract_dest, exist_ok=True)
 
             if ext == ".zip":
                 ok, err = try_extract_zip(save_path, extract_dest)
             else:
                 ok, err = try_extract_tar(save_path, extract_dest)
-
-            if not ok:
-                flash(f"解压失败：{err}")
-                return redirect(url_for("analyze"))
+            
+            os.remove(save_path)
         
         analysis_thread = threading.Thread(
             target=gc_scan,
-            args=(save_path, lang),
+            args=(save_path, extract_dest, lang, file_hash, filename),
             daemon=True
         )
         analysis_thread.start()
 
         flash(f"{filename} 已提交分析，正在处理中...")
-        return redirect(url_for('result', file_hash=file_hash))
+        return redirect(url_for('analyze'))
 
    return render_template("analyze.html")
 

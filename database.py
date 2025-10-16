@@ -1,9 +1,13 @@
 import sqlite3
+import os
 
-conn = sqlite3.connect('results.db')
-conn.row_factory = sqlite3.Row
+DB_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'results.db')
+
+def get_connect():
+    return sqlite3.connect(DB_PATH)
 
 def init_db():
+    conn = get_connect()
     c = conn.cursor()
     # 创建文件分析结果表
     c.execute('''
@@ -20,13 +24,29 @@ def init_db():
     conn.close()
 
 def is_analyzed(hash):
-    return conn.execute('SELECT * FROM analysis_results WHERE file_hash = ?', (hash,)).fetchone()
+    conn = get_connect()
+    try:
+        return conn.execute('SELECT * FROM results WHERE file_hash = ?', (hash,)).fetchone()
+    finally:
+        conn.close()
 
 def db_start_analyze(hash, name, lang, status):
+    conn = get_connect()
     conn.execute('''
-        INSERT INTO analysis_results (file_hash, filename, language, status)
+        INSERT INTO results (file_hash, filename, language, status)
         VALUES (?, ?, ?, ?)
         ''', (hash, name, lang, status))
     conn.commit()
+    conn.close()
+
+def db_finish_analyze(hash, gcs_str):
+    conn = get_connect()
+    conn.execute('''
+        UPDATE results
+        SET status = ?, analysis_result = ?
+        WHERE file_hash = ?
+        ''', ('finished', gcs_str, hash))
+    conn.commit()
+    conn.close()
 
 init_db()
