@@ -106,37 +106,45 @@
             
             <div class="overflow-x-auto">
                 <table class="min-w-full bg-white rounded-xl card-shadow">
-                    <!-- 表格内容保持不变 -->
                     <thead>
                         <tr class="bg-primary/10">
                             <th class="py-3 px-6 text-left text-sm font-semibold text-primary">文件名</th>
+                            <th class="py-3 px-6 text-left text-sm font-semibold text-primary">文件哈希</th>
                             <th class="py-3 px-6 text-left text-sm font-semibold text-primary">语言</th>
-                            <th class="py-3 px-6 text-left text-sm font-semibold text-primary">上传时间</th>
                             <th class="py-3 px-6 text-left text-sm font-semibold text-primary">状态</th>
                             <th class="py-3 px-6 text-left text-sm font-semibold text-primary">操作</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        <!-- 表格行保持不变 -->
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="py-4 px-6 text-sm text-gray-900">example.jar</td>
-                            <td class="py-4 px-6 text-sm text-gray-900">Java</td>
-                            <td class="py-4 px-6 text-sm text-gray-500">2023-06-15 14:30</td>
-                            <td class="py-4 px-6">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                    已完成
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-sm">
-                                <a href="#" class="text-primary hover:text-accent mr-3">
-                                    <i class="fa fa-eye mr-1"></i>查看
-                                </a>
-                                <a href="#" class="text-gray-500 hover:text-gray-700">
-                                    <i class="fa fa-download mr-1"></i>下载
-                                </a>
-                            </td>
-                        </tr>
-                        <!-- 其他行保持不变 -->
+                        {% if recent_records and recent_records|length > 0 %}
+                            {% for record in recent_records %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="py-4 px-6 text-sm text-gray-900">{{ record.filename }}</td>
+                                <td class="py-4 px-6 text-sm text-gray-900">{{ record.file_hash }}</td>
+                                <td class="py-4 px-6 text-sm text-gray-900">{{ record.language }}</td>
+                                <td class="py-4 px-6">
+                                    {% if record.status == 'finished' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">已完成</span>
+                                    {% elif record.status == 'pending' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">处理中</span>
+                                    {% else %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">失败</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-6 text-sm">
+                                    <a href="{{ url_for('result', file_hash=record.file_hash) }}" class="text-primary hover:text-accent mr-3">
+                                        <i class="fa fa-eye mr-1"></i>查看
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="py-8 px-6 text-center text-sm text-gray-500">
+                                    暂无分析记录
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>

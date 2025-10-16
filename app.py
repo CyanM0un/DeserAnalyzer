@@ -251,7 +251,8 @@ def analyze():
         flash(f"{filename} 已提交分析，正在处理中...")
         return redirect(url_for('analyze'))
 
-   return render_template("analyze.html")
+   recent_records = get_several_results()
+   return render_template("analyze.html", recent_records=recent_records)
 
 if __name__ == '__main__':
     app.run(debug=True)

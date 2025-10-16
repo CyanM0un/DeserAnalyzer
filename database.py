@@ -30,6 +30,24 @@ def is_analyzed(hash):
     finally:
         conn.close()
 
+def get_several_results(limit=3):
+    conn = get_connect()
+    
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT file_hash, filename, language, status 
+        FROM results 
+        LIMIT ?
+        """, (limit,))
+    
+    records = [dict(row) for row in cursor.fetchall()]
+    
+    cursor.close()
+    conn.close()
+    return records
+
 def db_start_analyze(hash, name, lang, status):
     conn = get_connect()
     conn.execute('''
