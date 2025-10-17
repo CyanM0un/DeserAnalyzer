@@ -21,10 +21,16 @@
           <span id="graph-meta" class="chip">0 节点 · 0 边</span>
         </div>
         <div class="graph-toolbar flex items-center gap-2">
-          <label for="chain-select" class="text-sm text-gray-600">显示</label>
-          <select id="chain-select" class="appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-1.5 px-2 pr-7 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-primary text-sm">
-            <option value="all">全部链路</option>
-          </select>
+          <!-- <label for="chain-select" class="text-sm text-gray-600">显示</label> -->
+          <div class="cs-select" id="chain-select-wrap" style="--cs-min-width:12rem; --cs-max-width:18rem;">
+            <select id="chain-select" class="cs-native" aria-hidden="true">
+              <option value="all">全部链路</option>
+            </select>
+            <button type="button" class="cs-trigger" id="chain-trigger" aria-haspopup="listbox" aria-expanded="false">
+              全部链路
+            </button>
+            <ul class="cs-menu" id="chain-menu" role="listbox" aria-labelledby="chain-trigger"></ul>
+          </div>
           <button id="fit-btn" class="bg-primary text-white px-3 py-1.5 rounded-md text-sm btn-hover"><i class="fa fa-compress"></i> 适配</button>
           <button id="focus-entry-btn" class="bg-accent text-white px-3 py-1.5 rounded-md text-sm btn-hover"><i class="fa fa-bullseye"></i> 聚焦入口</button>
         </div>

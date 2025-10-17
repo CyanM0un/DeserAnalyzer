@@ -4,11 +4,12 @@ from utils import *
 from database import *
 import threading
 import os
-import re
 import subprocess
 import json
 import shutil
 import sys
+import sqlite3
+import re
 
 # 以当前文件位置为根目录，避免相对路径问题
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -111,118 +112,88 @@ def index_html():
 
 @app.route('/result')
 def result():
-    # 从上传目录中加载分析结果（如果存在），期望文件名 chains.txt
-    def parse_gadget_chain_text(text: str):
-        """将链文本解析为前端可用的 chains 数组。
-        格式示例（链之间以空行分隔，末尾 !!! 表示危险汇聚点）：
-
-        <Class: Ret method(Signature)>->[idx,...]
-        <Class: Ret method(Signature)> !!!
+    # 结果页面仅从数据库读取调用链数据
+    def parse_php_gc_stacks(gc_list):
+        """将 PHP 分析结果中的 gc_stack 列表转换为 chains 结构。
+        gc_list: 形如 [ {"gc_stack": ["Class#method", ...]}, ... ]
         """
         chains = []
-        if not text:
+        if not isinstance(gc_list, list):
             return chains
-
-        blocks = re.split(r"\n\s*\n+", text.strip())
-        for bi, block in enumerate(blocks, start=1):
-            lines = [ln for ln in (block.strip().splitlines()) if ln.strip()]
-            if not lines:
+        for idx, item in enumerate(gc_list, start=1):
+            stack = item.get('gc_stack') if isinstance(item, dict) else None
+            if not stack or not isinstance(stack, list):
                 continue
-
             nodes = []
             edges = []
             prev_id = None
-            for i, raw in enumerate(lines):
-                line = raw.strip()
-                # 形如：<...>->[... ] 或 <...> !!! 或 <...>
-                # 提取签名、索引与是否为终点
-                has_bang = line.endswith('!!!')
-                # 去除 !!!
-                if has_bang:
-                    line = line[:-3].rstrip()
-
-                m = re.match(r"^<([^>]+)>(?:\s*->\s*(\[[^\]]*\]))?\s*$", line)
-                if not m:
-                    # 不符合预期格式，跳过该行
-                    continue
-
-                signature = m.group(1).strip()
-                idx_list = (m.group(2) or '').strip()
-
-                node_id = f"n{i}"
-                # 节点类型：首个为 entry；末尾带 !!! 为 sink；其余为 gadget
-                ntype = 'entry' if i == 0 else ('sink' if has_bang else 'gadget')
-                # 提取简短方法名，格式：Class: Ret method(Signature)
+            for i, frame in enumerate(stack):
+                label = str(frame)
+                # 取短方法名
                 short = None
-                try:
-                    mm = re.match(r"^[^:]+:\s*[^\s]+\s+([^\(]+)\(", signature)
-                    if mm:
-                        short = mm.group(1).strip()
-                except Exception:
-                    short = None
-                nodes.append({
-                    'id': node_id,
-                    'label': signature,   # 完整签名（用于 hover/详情）
-                    'short': short,       # 简短方法名（用于节点上显示）
-                    'type': ntype
-                })
-
+                if '#' in label:
+                    short = label.split('#', 1)[1]
+                elif '::' in label:
+                    short = label.split('::', 1)[1]
+                else:
+                    m = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*$", label)
+                    short = m.group(1) if m else label
+                ntype = 'entry' if i == 0 else ('sink' if i == len(stack) - 1 else 'gadget')
+                nid = f"n{i}"
+                nodes.append({'id': nid, 'label': label, 'short': short, 'type': ntype})
                 if prev_id is not None:
-                    label = ''
-                    if idx_list:
-                        label = idx_list
-                    edges.append({'from': prev_id, 'to': node_id, 'label': label})
-                prev_id = node_id
-
-            # 以第一行的方法名作为链入口名（entry）
-            entry_name = None
-            if nodes:
-                # 优先使用短方法名作为入口显示，其次使用冒号后的文本
-                entry_name = nodes[0].get('short') or nodes[0]['label'].split(':', 1)[-1].strip()
-            else:
-                entry_name = f"chain-{bi}"
-            chains.append({
-                'id': f'c{bi}',
-                'entry': entry_name,
-                'nodes': nodes,
-                'edges': edges
-            })
+                    edges.append({'from': prev_id, 'to': nid, 'label': ''})
+                prev_id = nid
+            entry = nodes[0]['short'] if nodes else f'chain-{idx}'
+            chains.append({'id': f'c{idx}', 'entry': entry, 'nodes': nodes, 'edges': edges})
         return chains
 
-    def load_projects_from_uploads():
-        projects = []
-        for lang, d in (("Java", JAVA_DIR), ("PHP", PHP_DIR)):
-            if not os.path.isdir(d):
-                continue
+    def safe_json_loads(s: str):
+        if s is None:
+            return None
+        try:
+            return json.loads(s)
+        except Exception:
             try:
-                for fn in sorted(os.listdir(d)):
-                    fp = os.path.join(d, fn)
-                    if not os.path.isfile(fp):
-                        continue
-                    name, ext = os.path.splitext(fn)
-                    if ext.lower() != '.txt':
-                        continue
-                    content = None
-                    try:
-                        with open(fp, 'r', encoding='utf-8', errors='ignore') as f:
-                            content = f.read()
-                    except Exception:
-                        content = None
-                    if not content:
-                        continue
-                    chains = parse_gadget_chain_text(content)
-                    if chains:
-                        projects.append({
-                            'id': f'{lang.lower()}-{name}',
-                            'name': name,            # 使用文件名作为项目名（例如 c3p0）
-                            'language': lang,
-                            'chains': chains
-                        })
+                fixed = s.replace('""', '"')
+                return json.loads(fixed)
             except Exception:
-                pass
+                return None
+
+    def load_projects_from_db():
+        projects = []
+        try:
+            conn = get_connect()
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT file_hash, filename, language, analysis_result, status FROM results WHERE analysis_result IS NOT NULL")
+            rows = cur.fetchall()
+            for row in rows:
+                filename = row['filename']
+                language = row['language']
+                analysis_result = row['analysis_result']
+                name = os.path.splitext(filename)[0]
+
+                chains = []
+                data = safe_json_loads(analysis_result)
+                if language == 'PHP' and data:
+                    chains = parse_php_gc_stacks(data)
+                # TODO: Java 可在此扩展
+                if chains:
+                    projects.append({
+                        'id': f"{language.lower()}-{name}",
+                        'name': name,
+                        'language': language,
+                        'chains': chains
+                    })
+            cur.close()
+            conn.close()
+        except Exception as e:
+            # 打印错误但不阻断页面
+            print('load_projects_from_db error:', e)
         return projects
 
-    projects = load_projects_from_uploads()
+    projects = load_projects_from_db()
     # 如果没有解析到任何项目，传 None 以启用前端示例数据
     return render_template('result.html', projects=(projects if projects else None))
 

@@ -37,7 +37,52 @@ document.addEventListener('DOMContentLoaded', () => {
   const projectCountEl = document.getElementById('project-count');
   const graphTitleEl = document.getElementById('graph-title');
   const graphMetaEl = document.getElementById('graph-meta');
-  const chainSelect = document.getElementById('chain-select'); // 只声明一次
+  const chainSelect = document.getElementById('chain-select'); // 原生 select（隐藏）
+  const chainWrap = document.getElementById('chain-select-wrap');
+  const chainTrigger = document.getElementById('chain-trigger');
+  const chainMenu = document.getElementById('chain-menu');
+
+  function closeMenu() {
+    chainMenu.classList.remove('show');
+    chainTrigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function openMenu() {
+    chainMenu.classList.add('show');
+    chainTrigger.setAttribute('aria-expanded', 'true');
+  }
+
+  function rebuildMenuFromSelect() {
+    // 用原生 select 的 options 生成菜单项
+    chainMenu.innerHTML = '';
+    Array.from(chainSelect.options).forEach((opt, idx) => {
+      const li = document.createElement('li');
+      li.className = 'cs-option' + (opt.selected ? ' is-active' : '');
+      li.setAttribute('role', 'option');
+      li.dataset.value = opt.value;
+      li.textContent = opt.textContent;
+      li.addEventListener('click', () => {
+        // 设置原生 select 的值并触发 change
+        chainSelect.value = opt.value;
+        chainTrigger.textContent = opt.textContent;
+        Array.from(chainMenu.children).forEach(c => c.classList.remove('is-active'));
+        li.classList.add('is-active');
+        chainSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        closeMenu();
+      });
+      chainMenu.appendChild(li);
+      if (idx === 0 && !chainTrigger.textContent.trim()) {
+        chainTrigger.textContent = opt.textContent;
+      }
+    });
+  }
+
+  chainTrigger.addEventListener('click', () => {
+    if (chainMenu.classList.contains('show')) closeMenu(); else openMenu();
+  });
+  document.addEventListener('click', (e) => {
+    if (!chainWrap.contains(e.target)) closeMenu();
+  });
 
   // 渲染项目列表
   function renderProjectList(items) {
@@ -272,6 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
       opt.textContent = `链 ${idx + 1}: ${ch.entry}`;
       chainSelect.appendChild(opt);
     });
+    // 重建自定义菜单
+    chainTrigger.textContent = '全部链路';
+    rebuildMenuFromSelect();
     renderGraph(p, 'all');
     updateCharts();
   }
@@ -283,4 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectProject(projects[0]);
     updateCharts();
   }
+
+  // 首次构建菜单（以防没有项目时也不报错）
+  rebuildMenuFromSelect();
 });
