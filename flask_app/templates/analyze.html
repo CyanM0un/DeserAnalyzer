@@ -63,7 +63,7 @@
                             <i class="fa fa-file-code-o text-2xl text-primary"></i>
                         </div>
                         <p class="text-gray-600 mb-2">将文件拖到此处或点击上传</p>
-                        <p class="text-sm text-gray-500 mb-6">Java程序请上传Jar文件，PHP程序请上传压缩包（zip，tar）</p>
+                        <p class="text-sm text-gray-500 mb-6">Java程序请上传Jar文件（多个请进行压缩），PHP程序请上传压缩包（zip，tar）</p>
 
                         <input type="file" id="file-input" name="file" class="hidden" accept="*">
                         
@@ -116,8 +116,8 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        {% if recent_records and recent_records|length > 0 %}
-                            {% for record in recent_records %}
+                        {% if limited_records and limited_records|length > 0 %}
+                            {% for record in limited_records %}
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="py-4 px-6 text-sm text-gray-900">{{ record.filename }}</td>
                                 <td class="py-4 px-6 text-sm text-gray-900">{{ record.file_hash }}</td>

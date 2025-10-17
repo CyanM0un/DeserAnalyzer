@@ -25,12 +25,22 @@ def init_db():
 
 def is_analyzed(hash):
     conn = get_connect()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
     try:
-        return conn.execute('SELECT * FROM results WHERE file_hash = ?', (hash,)).fetchone()
+        cursor.execute('SELECT * FROM results WHERE file_hash = ?', (hash,))
+        rows = cursor.fetchone()
+        if rows is not None:
+            records = dict(rows)
+        else:
+            records = None
     finally:
+        cursor.close()
         conn.close()
+    
+    return records
 
-def get_several_results(limit=3):
+def get_limited_results(limit=3):
     conn = get_connect()
     
     conn.row_factory = sqlite3.Row

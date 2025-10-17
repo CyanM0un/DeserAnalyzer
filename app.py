@@ -7,6 +7,8 @@ import os
 import re
 import subprocess
 import json
+import shutil
+import sys
 
 # 以当前文件位置为根目录，避免相对路径问题
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -19,7 +21,7 @@ os.makedirs(JAVA_DIR, exist_ok=True)
 os.makedirs(PHP_DIR, exist_ok=True)
 
 ALLOWED_EXT = {
-    "Java": {".jar"},
+    "Java": {".jar", ".zip", ".tar", ".tar.gz"},
     "PHP": {".zip", ".tar", ".tar.gz",}
 }
 
@@ -38,6 +40,7 @@ def get_gc_php(gc_file):
         gc = {}
         temp = json.loads(content)
         gc["gc_stack"] = temp['funcStack']
+        gc["filepos_stack"] = temp['callStack']
         gcs.append(gc)
 
     return gcs
@@ -47,11 +50,13 @@ def gc_scan_php(target, hash, filename):
     run_cmd = ["python", "Main.py"]
     os.environ['PHP_PROG_ROOT'] = target
 
-    result = subprocess.run(run_cmd, cwd=tool_dir, capture_output=True, text=True)
+    with subprocess.Popen(run_cmd, cwd=tool_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+        for line in proc.stdout:
+            print(line, end='')
+            sys.stdout.flush()
     
-    print(result.stdout)
-    if result.stderr:
-        print("Error:", result.stderr)
+    if proc.returncode != 0:
+        print(f"命令执行失败")
 
     results_dir = os.path.join(tool_dir, 'result')
     for result_dir in os.listdir(results_dir):
@@ -65,9 +70,36 @@ def gc_scan_php(target, hash, filename):
         db_finish_analyze(hash, gcs_str)
         print(f"{filename} finished analysis")
 
-def gc_scan(file_path, project_path, lang, hash, file_name):
+def gc_scan_java(target, hash, file_name):
+    print(target)
+    tool_dir = os.path.join(ROOT_DIR, "tools", "java")
+    new_config = os.path.join(tool_dir, "java-benchmarks/JDV/target.yml")
+    generate_yaml(os.path.join(tool_dir, "java-benchmarks/JDV/base.yml"), target, new_config)
+    run_cmd = ["java", "-Xss512m", "-Xmx8G", "-jar", "flash.jar", "--options-file", "java-benchmarks/JDV/target.yml"]
+
+    with subprocess.Popen(run_cmd, cwd=tool_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+        for line in proc.stdout:
+            print(line, end='')
+            sys.stdout.flush()
+
+    os.remove(new_config)
+
+    if proc.returncode != 0:
+        print(f"命令执行失败")
+
+    gc_file = os.path.join(tool_dir, "output", "chains.json")
+    with open(gc_file, "r") as f:
+        gcs = json.load(f)
+
+    gcs_str = json.dumps(gcs)
+    db_finish_analyze(hash, gcs_str)
+    print(f"{file_name} finished analysis")
+
+def gc_scan(project_path, lang, hash, file_name):
     if lang == "PHP":
         gc_scan_php(project_path, hash, file_name)
+    elif lang == "Java":
+        gc_scan_java(project_path, hash, file_name)
 
 @app.route('/')
 def index():
@@ -208,6 +240,7 @@ def analyze():
         
         file_hash = get_file_hash(uploaded)
         analyzed = is_analyzed(file_hash)
+        filename = secure_filename(uploaded.filename)
 
         if analyzed:
             if analyzed['status'] == 'completed':
@@ -215,7 +248,6 @@ def analyze():
             flash(f"文件 {filename} 正在分析中，请稍后查看结果")
             return redirect(url_for('analyze'))
 
-        filename = secure_filename(uploaded.filename)
         ext = ext_of(filename)
         allowed = ALLOWED_EXT.get(lang, set())
         db_start_analyze(file_hash, filename, lang, "pending")
@@ -226,24 +258,26 @@ def analyze():
 
         if lang == "Java":
             save_path = os.path.join(JAVA_DIR, filename)
-            save_file(uploaded, save_path)
-
-        if lang == "PHP":
+            extract_dest = os.path.join(JAVA_DIR, file_hash)
+        elif lang == "PHP":
             save_path = os.path.join(PHP_DIR, filename)
-            save_file(uploaded, save_path)
             extract_dest = os.path.join(PHP_DIR, file_hash)
-            os.makedirs(extract_dest, exist_ok=True)
 
-            if ext == ".zip":
-                ok, err = try_extract_zip(save_path, extract_dest)
-            else:
-                ok, err = try_extract_tar(save_path, extract_dest)
-            
+        save_file(uploaded, save_path)
+        os.makedirs(extract_dest, exist_ok=True)
+
+        if ext == ".zip":
+            try_extract_zip(save_path, extract_dest)
             os.remove(save_path)
+        elif ext == ".tar" or ext == ".tar.gz":
+            try_extract_tar(save_path, extract_dest)
+            os.remove(save_path)
+        elif ext == ".jar":
+            shutil.move(save_path, extract_dest)
         
         analysis_thread = threading.Thread(
             target=gc_scan,
-            args=(save_path, extract_dest, lang, file_hash, filename),
+            args=(extract_dest, lang, file_hash, filename),
             daemon=True
         )
         analysis_thread.start()
@@ -251,8 +285,8 @@ def analyze():
         flash(f"{filename} 已提交分析，正在处理中...")
         return redirect(url_for('analyze'))
 
-   recent_records = get_several_results()
-   return render_template("analyze.html", recent_records=recent_records)
+   limited_records = get_limited_results()
+   return render_template("analyze.html", limited_records=limited_records)
 
 if __name__ == '__main__':
     app.run(debug=True)
