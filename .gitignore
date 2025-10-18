@@ -1,1 +1,5 @@
 __pycache__
+**/result/**
+**/output/**
+**/uploads/**
+/tools/java/time

@@ -148,17 +148,136 @@ def result():
             chains.append({'id': f'c{idx}', 'entry': entry, 'nodes': nodes, 'edges': edges})
         return chains
 
+    def parse_java_gc(data):
+        """尽量容错地解析 Java 工具输出为通用 chains 结构。
+        兼容格式：
+        - { "chains": [ { nodes:[...], edges:[...] } , ... ] }
+        - [ { nodes:[...], edges:[...] }, ... ]
+        - [ { path:[...]} , ... ]  或 [ [func, func, ...], ... ]
+        - [ { funcStack:[...]} , ... ]
+        - [ { gc_stack:[...], filepos_stack:[...] } , ... ]  // 数据库中的 Java 结果与 PHP 类似
+        """
+        def short_from_label(label: str):
+            # Java 角括号风格：<pkg.Class: retType method(args)>
+            if label.startswith('<') and ':' in label and '(' in label and '>' in label:
+                try:
+                    inner = label[1:label.rfind('>')]
+                    part = inner.split(':', 1)[1]
+                    # part 形如 " void readObject(java.io.ObjectInputStream)"
+                    before_paren = part.split('(', 1)[0]
+                    tokens = before_paren.strip().split()
+                    if tokens:
+                        return tokens[-1]
+                except Exception:
+                    pass
+            # 常规分隔符
+            if '#' in label:
+                return label.split('#', 1)[1]
+            if '::' in label:
+                return label.split('::', 1)[1]
+            # 不直接用最后一个 '.'，避免误取参数类型末尾
+            m = re.search(r"([A-Za-z_$][A-Za-z0-9_$<>]*)\s*(?:\(|$)", label)
+            return m.group(1) if m else label
+        def make_chain_from_labels(labels, idx_base):
+            nodes, edges = [], []
+            prev = None
+            for i, lab in enumerate(labels):
+                label = str(lab)
+                # 取短方法名：优先 '#' 或 '::' 分隔，其次最后一个 '.'
+                short = short_from_label(label)
+                ntype = 'entry' if i == 0 else ('sink' if i == len(labels) - 1 else 'gadget')
+                nid = f"n{idx_base}_{i}"
+                nodes.append({'id': nid, 'label': label, 'short': short, 'type': ntype})
+                if prev is not None:
+                    edges.append({'from': prev, 'to': nid, 'label': ''})
+                prev = nid
+            entry = nodes[0]['short'] if nodes else f'chain-{idx_base}'
+            return {'id': f'c{idx_base}', 'entry': entry, 'nodes': nodes, 'edges': edges}
+
+        chains = []
+        if data is None:
+            return chains
+        try:
+            # 顶层可能有 chains 字段
+            if isinstance(data, dict) and isinstance(data.get('chains'), list):
+                raw_chains = data['chains']
+            else:
+                raw_chains = data if isinstance(data, list) else []
+
+            for idx, ch in enumerate(raw_chains, start=1):
+                # 已是标准格式
+                if isinstance(ch, dict) and isinstance(ch.get('nodes'), list):
+                    # 规范化 nodes/edges
+                    norm_nodes = []
+                    for i, n in enumerate(ch['nodes']):
+                        if isinstance(n, dict):
+                            label = n.get('label') or n.get('name') or ''
+                        else:
+                            label = str(n)
+                        short = short_from_label(label)
+                        ntype = 'entry' if i == 0 else ('sink' if i == len(ch['nodes']) - 1 else 'gadget')
+                        nid = n.get('id') if isinstance(n, dict) and n.get('id') else f"n{idx}_{i}"
+                        norm_nodes.append({'id': nid, 'label': label, 'short': short, 'type': ntype})
+                    # 边，如果没有就按顺序连线
+                    norm_edges = []
+                    if isinstance(ch.get('edges'), list) and ch['edges']:
+                        for e in ch['edges']:
+                            if isinstance(e, dict) and e.get('from') and e.get('to'):
+                                norm_edges.append({'from': e['from'], 'to': e['to'], 'label': e.get('label', '')})
+                    else:
+                        for i in range(1, len(norm_nodes)):
+                            norm_edges.append({'from': norm_nodes[i-1]['id'], 'to': norm_nodes[i]['id'], 'label': ''})
+                    entry = norm_nodes[0]['short'] if norm_nodes else f'chain-{idx}'
+                    chains.append({'id': f'c{idx}', 'entry': entry, 'nodes': norm_nodes, 'edges': norm_edges})
+                # 典型路径数组
+                elif isinstance(ch, dict) and isinstance(ch.get('path'), list):
+                    chains.append(make_chain_from_labels(ch['path'], idx))
+                elif isinstance(ch, dict) and isinstance(ch.get('funcStack'), list):
+                    chains.append(make_chain_from_labels(ch['funcStack'], idx))
+                elif isinstance(ch, dict) and isinstance(ch.get('gc_stack'), list):
+                    chains.append(make_chain_from_labels(ch['gc_stack'], idx))
+                elif isinstance(ch, list):
+                    chains.append(make_chain_from_labels(ch, idx))
+                else:
+                    # 无法识别的，跳过
+                    continue
+        except Exception as e:
+            print('parse_java_gc error:', e)
+        return chains
+
     def safe_json_loads(s: str):
         if s is None:
             return None
+        # 已经是对象
+        if isinstance(s, (list, dict)):
+            return s
+        # 确保是字符串
+        if not isinstance(s, str):
+            s = str(s)
+        # 直接尝试
         try:
             return json.loads(s)
         except Exception:
+            pass
+        # 处理形如："23\t<hash>\t<file>\tJava\t[ ... ]" 的行，提取 JSON 片段
+        try:
+            lbr = min([i for i in [s.find('['), s.find('{')] if i != -1]) if ('[' in s or '{' in s) else -1
+        except Exception:
+            lbr = -1
+        if lbr != -1:
+            candidate = s[lbr:].strip()
+            # 去掉行尾可能多余的字符
+            candidate = candidate.rstrip(';')
             try:
-                fixed = s.replace('""', '"')
-                return json.loads(fixed)
+                return json.loads(candidate)
             except Exception:
-                return None
+                # 再尝试修复双引号
+                try:
+                    fixed = candidate.replace('""', '"')
+                    return json.loads(fixed)
+                except Exception:
+                    return None
+        return None
 
     def load_projects_from_db():
         projects = []
@@ -178,14 +297,15 @@ def result():
                 data = safe_json_loads(analysis_result)
                 if language == 'PHP' and data:
                     chains = parse_php_gc_stacks(data)
-                # TODO: Java 可在此扩展
-                if chains:
-                    projects.append({
-                        'id': f"{language.lower()}-{name}",
-                        'name': name,
-                        'language': language,
-                        'chains': chains
-                    })
+                elif language == 'Java' and data is not None:
+                    chains = parse_java_gc(data)
+                # 始终加入项目（即使没有链），以便统计板块显示项目数
+                projects.append({
+                    'id': f"{language.lower()}-{name}",
+                    'name': name,
+                    'language': language,
+                    'chains': chains or []
+                })
             cur.close()
             conn.close()
         except Exception as e:

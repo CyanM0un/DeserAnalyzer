@@ -10,27 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   })();
 
-  const sampleProjects = [
-    {
-      id: 'p1', name: 'Example-Java', language: 'Java',
-      chains: [
-        {
-          id: 'c1', entry: 'readObject',
-          nodes: [
-            { id: 'A', label: 'ObjectInputStream.readObject', short: 'readObject', type: 'entry' },
-            { id: 'B', label: 'GadgetA.trigger()', short: 'trigger', type: 'gadget' },
-            { id: 'C', label: 'Runtime.exec()', short: 'exec', type: 'sink' }
-          ],
-          edges: [
-            { from: 'A', to: 'B', label: 'calls' },
-            { from: 'B', to: 'C', label: 'leads to' }
-          ]
-        }
-      ]
-    }
-  ];
-
-  const projects = projectsFromServer || sampleProjects;
+  // 无数据时不展示示例，保持为空数组
+  const projects = projectsFromServer || [];
 
   // UI 元素
   const projectListEl = document.getElementById('project-list');
@@ -314,7 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
     (p.chains || []).forEach((ch, idx) => {
       const opt = document.createElement('option');
       opt.value = String(idx);
-      opt.textContent = `链 ${idx + 1}: ${ch.entry}`;
+      const label = ch.name ? `链 ${idx + 1}: ${ch.name}` : `链 ${idx + 1}: ${ch.entry}`;
+      opt.textContent = label;
+      opt.title = ch.name ? `入口: ${ch.entry}` : label;
       chainSelect.appendChild(opt);
     });
     // 重建自定义菜单

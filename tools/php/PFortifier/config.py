@@ -4,6 +4,7 @@ configuration file
 
 import os
 import shutil
+import re
 
 # garbage collect
 # on: reduce memory usage, but process speed down
@@ -73,7 +74,10 @@ php_prog_root = os.environ.get("PHP_PROG_ROOT")
 hunter_root = os.getcwd()
 
 # The result dir
-res_root = hunter_root + r'/result/' + php_prog_root.replace(':', "_").replace('\\', '_').replace('/', '_') + '/'
+tail = os.path.basename(php_prog_root.rstrip('/\\'))
+m = re.search(r'([0-9a-fA-F]{32})$', tail)
+res_dir_name = m.group(1)
+res_root = os.path.join(hunter_root, 'result', res_dir_name) + os.sep
 
 # must be the absolute path, result file to store the found chains
 result_file = res_root + r'pop_chains.json'
