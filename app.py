@@ -149,41 +149,30 @@ def result():
         return chains
 
     def parse_java_gc(data):
-        """尽量容错地解析 Java 工具输出为通用 chains 结构。
-        兼容格式：
-        - { "chains": [ { nodes:[...], edges:[...] } , ... ] }
-        - [ { nodes:[...], edges:[...] }, ... ]
-        - [ { path:[...]} , ... ]  或 [ [func, func, ...], ... ]
-        - [ { funcStack:[...]} , ... ]
-        - [ { gc_stack:[...], filepos_stack:[...] } , ... ]  // 数据库中的 Java 结果与 PHP 类似
-        """
+        """容错解析 Java 分析结果，输出与前端一致的 chains 结构。"""
         def short_from_label(label: str):
-            # Java 角括号风格：<pkg.Class: retType method(args)>
             if label.startswith('<') and ':' in label and '(' in label and '>' in label:
                 try:
                     inner = label[1:label.rfind('>')]
                     part = inner.split(':', 1)[1]
-                    # part 形如 " void readObject(java.io.ObjectInputStream)"
                     before_paren = part.split('(', 1)[0]
                     tokens = before_paren.strip().split()
                     if tokens:
                         return tokens[-1]
                 except Exception:
                     pass
-            # 常规分隔符
             if '#' in label:
                 return label.split('#', 1)[1]
             if '::' in label:
                 return label.split('::', 1)[1]
-            # 不直接用最后一个 '.'，避免误取参数类型末尾
             m = re.search(r"([A-Za-z_$][A-Za-z0-9_$<>]*)\s*(?:\(|$)", label)
             return m.group(1) if m else label
+
         def make_chain_from_labels(labels, idx_base):
             nodes, edges = [], []
             prev = None
             for i, lab in enumerate(labels):
                 label = str(lab)
-                # 取短方法名：优先 '#' 或 '::' 分隔，其次最后一个 '.'
                 short = short_from_label(label)
                 ntype = 'entry' if i == 0 else ('sink' if i == len(labels) - 1 else 'gadget')
                 nid = f"n{idx_base}_{i}"
@@ -198,27 +187,21 @@ def result():
         if data is None:
             return chains
         try:
-            # 顶层可能有 chains 字段
             if isinstance(data, dict) and isinstance(data.get('chains'), list):
-                raw_chains = data['chains']
+                raw = data['chains']
             else:
-                raw_chains = data if isinstance(data, list) else []
+                raw = data if isinstance(data, list) else []
 
-            for idx, ch in enumerate(raw_chains, start=1):
-                # 已是标准格式
+            for idx, ch in enumerate(raw, start=1):
                 if isinstance(ch, dict) and isinstance(ch.get('nodes'), list):
-                    # 规范化 nodes/edges
                     norm_nodes = []
                     for i, n in enumerate(ch['nodes']):
-                        if isinstance(n, dict):
-                            label = n.get('label') or n.get('name') or ''
-                        else:
-                            label = str(n)
+                        label = n.get('label') or n.get('name') if isinstance(n, dict) else str(n)
+                        label = label or ''
                         short = short_from_label(label)
                         ntype = 'entry' if i == 0 else ('sink' if i == len(ch['nodes']) - 1 else 'gadget')
                         nid = n.get('id') if isinstance(n, dict) and n.get('id') else f"n{idx}_{i}"
                         norm_nodes.append({'id': nid, 'label': label, 'short': short, 'type': ntype})
-                    # 边，如果没有就按顺序连线
                     norm_edges = []
                     if isinstance(ch.get('edges'), list) and ch['edges']:
                         for e in ch['edges']:
@@ -229,7 +212,6 @@ def result():
                             norm_edges.append({'from': norm_nodes[i-1]['id'], 'to': norm_nodes[i]['id'], 'label': ''})
                     entry = norm_nodes[0]['short'] if norm_nodes else f'chain-{idx}'
                     chains.append({'id': f'c{idx}', 'entry': entry, 'nodes': norm_nodes, 'edges': norm_edges})
-                # 典型路径数组
                 elif isinstance(ch, dict) and isinstance(ch.get('path'), list):
                     chains.append(make_chain_from_labels(ch['path'], idx))
                 elif isinstance(ch, dict) and isinstance(ch.get('funcStack'), list):
@@ -239,7 +221,6 @@ def result():
                 elif isinstance(ch, list):
                     chains.append(make_chain_from_labels(ch, idx))
                 else:
-                    # 无法识别的，跳过
                     continue
         except Exception as e:
             print('parse_java_gc error:', e)
@@ -248,36 +229,42 @@ def result():
     def safe_json_loads(s: str):
         if s is None:
             return None
-        # 已经是对象
         if isinstance(s, (list, dict)):
             return s
-        # 确保是字符串
         if not isinstance(s, str):
             s = str(s)
-        # 直接尝试
         try:
             return json.loads(s)
         except Exception:
             pass
-        # 处理形如："23\t<hash>\t<file>\tJava\t[ ... ]" 的行，提取 JSON 片段
+        # 兼容形如："23\t<hash>\t<file>\tJava\t[ ... ]" 的行，只提取最后的 JSON 片段
         try:
             lbr = min([i for i in [s.find('['), s.find('{')] if i != -1]) if ('[' in s or '{' in s) else -1
         except Exception:
             lbr = -1
         if lbr != -1:
-            candidate = s[lbr:].strip()
-            # 去掉行尾可能多余的字符
-            candidate = candidate.rstrip(';')
+            candidate = s[lbr:].strip().rstrip(';')
             try:
                 return json.loads(candidate)
             except Exception:
-                # 再尝试修复双引号
                 try:
                     fixed = candidate.replace('""', '"')
                     return json.loads(fixed)
                 except Exception:
                     return None
         return None
+
+    def safe_json_loads(s: str):
+        if s is None:
+            return None
+        try:
+            return json.loads(s)
+        except Exception:
+            try:
+                fixed = s.replace('""', '"')
+                return json.loads(fixed)
+            except Exception:
+                return None
 
     def load_projects_from_db():
         projects = []
@@ -292,6 +279,7 @@ def result():
                 language = row['language']
                 analysis_result = row['analysis_result']
                 name = os.path.splitext(filename)[0]
+                file_hash = row['file_hash']
 
                 chains = []
                 data = safe_json_loads(analysis_result)
@@ -299,12 +287,13 @@ def result():
                     chains = parse_php_gc_stacks(data)
                 elif language == 'Java' and data is not None:
                     chains = parse_java_gc(data)
-                # 始终加入项目（即使没有链），以便统计板块显示项目数
+                # 始终加入项目，便于右侧统计与审计按钮可用
                 projects.append({
                     'id': f"{language.lower()}-{name}",
                     'name': name,
                     'language': language,
-                    'chains': chains or []
+                    'chains': chains or [],
+                    'file_hash': file_hash,
                 })
             cur.close()
             conn.close()
@@ -316,6 +305,151 @@ def result():
     projects = load_projects_from_db()
     # 如果没有解析到任何项目，传 None 以启用前端示例数据
     return render_template('result.html', projects=(projects if projects else None))
+
+# ===== 在线审计支持 =====
+def _safe_rel_join(root, given_path):
+    if not given_path:
+        return None
+    root_abs = os.path.abspath(root)
+    if os.path.isabs(given_path):
+        cand_abs = os.path.abspath(os.path.normpath(given_path))
+    else:
+        cand_abs = os.path.abspath(os.path.normpath(os.path.join(root_abs, given_path)))
+    try:
+        if os.path.commonpath([cand_abs, root_abs]) != root_abs:
+            return None
+    except Exception:
+        return None
+    return cand_abs
+
+def _extract_function_block(file_path, line_no, lang='PHP', max_scan=400):
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+    except Exception:
+        return None
+    n = len(lines)
+    idx = max(1, min(int(line_no or 1), n))
+    i0 = idx - 1
+    if str(lang).upper() == 'PHP':
+        sig_re = re.compile(r"\bfunction\s+&?([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+    else:
+        sig_re = re.compile(r'^(\s*(public|private|protected)\s+)?(static\s+)?[A-Za-z0-9_\<\>\[\]\.?]+\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(')
+    start = None
+    func_name = None
+    for up in range(i0, max(-1, i0 - max_scan), -1):
+        m = sig_re.search(lines[up])
+        if m:
+            start = up
+            try:
+                func_name = m.group(1) if str(lang).upper() == 'PHP' else m.group(4)
+            except Exception:
+                func_name = None
+            break
+    if start is None:
+        s = max(0, i0 - 40); e = min(n, i0 + 40)
+        return {'func_name': None, 'start_line': s+1, 'end_line': e, 'code_lines': lines[s:e]}
+    brace_open_line = None
+    for j in range(start, min(n, start + 20)):
+        if '{' in lines[j]:
+            brace_open_line = j
+            break
+    if brace_open_line is None:
+        s = max(0, start - 2); e = min(n, start + 10)
+        return {'func_name': func_name, 'start_line': s+1, 'end_line': e, 'code_lines': lines[s:e]}
+    depth = 0
+    end = None
+    for k in range(brace_open_line, min(n, brace_open_line + max_scan)):
+        depth += lines[k].count('{')
+        depth -= lines[k].count('}')
+        if depth == 0 and k > brace_open_line:
+            end = k
+            break
+    if end is None:
+        end = min(n - 1, brace_open_line + 200)
+    s = max(0, start)
+    e = min(n, end + 1)
+    return {'func_name': func_name, 'start_line': s+1, 'end_line': e, 'code_lines': lines[s:e]}
+
+@app.route('/audit')
+def audit():
+    file_hash = request.args.get('hash')
+    idx = request.args.get('idx', type=int, default=0)
+    lang = request.args.get('lang', default=None)
+    if not file_hash:
+        return redirect(url_for('result'))
+    try:
+        conn = get_connect(); conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT filename, language, analysis_result FROM results WHERE file_hash = ?", (file_hash,))
+        row = cur.fetchone(); cur.close(); conn.close()
+        if not row:
+            return render_template('audit.html', meta={'project':'未知','language':lang or '未知','chain_index':0,'length':0,'entry':'','sink':''}, steps=[])
+        language = lang or row['language']
+        name = os.path.splitext(row['filename'])[0]
+        data = json.loads(row['analysis_result']) if row['analysis_result'] else None
+        raw_list = data if isinstance(data, list) else (data.get('chains') if isinstance(data, dict) else [])
+        if not raw_list:
+            return render_template('audit.html', meta={'project': name, 'language': language, 'chain_index': 0, 'length': 0, 'entry': '', 'sink': ''}, steps=[])
+        idx = max(0, min(idx, len(raw_list) - 1))
+        ch = raw_list[idx]
+        if isinstance(ch, dict):
+            stack = ch.get('gc_stack') or ch.get('funcStack') or ch.get('path') or ch.get('nodes')
+            if isinstance(stack, list) and stack and isinstance(stack[0], dict):
+                stack = [ (n.get('label') or n.get('name') or str(n)) for n in stack ]
+            filepos = ch.get('filepos_stack') if isinstance(ch.get('filepos_stack'), list) else None
+        elif isinstance(ch, list):
+            stack = ch; filepos = None
+        else:
+            stack = None; filepos = None
+        if not isinstance(stack, list):
+            return render_template('audit.html', meta={'project': name, 'language': language, 'chain_index': idx+1, 'length': 0, 'entry': '', 'sink': ''}, steps=[])
+        lang_dir = PHP_DIR if (language == 'PHP') else JAVA_DIR
+        proj_root = os.path.join(lang_dir, file_hash)
+        steps = []
+        for i, label in enumerate(stack, start=1):
+            raw_path = None; line_no = None
+            if filepos and i-1 < len(filepos) and isinstance(filepos[i-1], (list, tuple)):
+                try:
+                    raw_path = filepos[i-1][0]
+                    line_no = int(filepos[i-1][1])
+                except Exception:
+                    pass
+            abs_path = _safe_rel_join(proj_root, raw_path) if raw_path else None
+            display_rel = None
+            if abs_path:
+                try:
+                    display_rel = os.path.relpath(abs_path, proj_root)
+                except Exception:
+                    display_rel = raw_path
+            else:
+                display_rel = raw_path
+            snippet = None
+            if abs_path and os.path.isfile(abs_path) and line_no:
+                snippet = _extract_function_block(abs_path, line_no, lang=language)
+            steps.append({
+                'index': i,
+                'label': str(label),
+                'rel_path': display_rel,
+                'line': line_no,
+                'found': bool(snippet),
+                'func_name': snippet.get('func_name') if snippet else None,
+                'start_line': snippet.get('start_line') if snippet else None,
+                'end_line': snippet.get('end_line') if snippet else None,
+                'code_lines': snippet.get('code_lines') if snippet else None,
+            })
+        meta = {
+            'project': name,
+            'language': language,
+            'chain_index': idx + 1,
+            'length': len(stack),
+            'entry': str(stack[0]) if stack else '',
+            'sink': str(stack[-1]) if stack else ''
+        }
+        return render_template('audit.html', meta=meta, steps=steps)
+    except Exception as e:
+        print('audit error:', e)
+        return render_template('audit.html', meta={'project':'错误','language':lang or '未知','chain_index':0,'length':0,'entry':'','sink':''}, steps=[])
 
 @app.route("/analyze", methods=["GET", "POST"])
 def analyze():

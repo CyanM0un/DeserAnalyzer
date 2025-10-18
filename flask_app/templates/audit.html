@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}在线审计 - {{ meta.project }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 审计页标题区域：左标题 + 右侧元信息，自动换行 */
+  .audit-head { display: grid; grid-template-columns: 1fr auto; gap: .25rem 1rem; align-items: start; }
+  @media (max-width: 768px) { .audit-head { grid-template-columns: 1fr; } .audit-meta { justify-self: start; text-align: left; } }
+  .audit-title { margin: 0; font-size: 1.125rem; font-weight: 600; color: #0F766E; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2; word-break: break-all; }
+  .audit-meta { font-size: .875rem; color: #64748b; max-width: 60ch; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2; word-break: break-all; justify-self: end; text-align: right; }
+  .audit-meta code { color: #0f172a; }
+  /* 代码块等宽字体与滚动优化 */
+  pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; display: block; white-space: pre; }
+  /* 小屏时增加可读性 */
+  @media (max-width: 640px) { .audit-meta { max-width: 100%; } }
+  /* 行号区域更紧凑 */
+  .code-ln { color: #94a3b8; }
+  .code-line { white-space: pre; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-primary">在线审计</h1>
+      <p class="text-gray-600 mt-1">项目：{{ meta.project }} · 语言：{{ meta.language }} · 链 {{ meta.chain_index }} / 长度 {{ meta.length }}</p>
+      <p class="text-gray-500 text-sm mt-1">Source：{{ meta.entry }} -> Sink：{{ meta.sink }}</p>
+    </div>
+    <a class="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium btn-hover" href="{{ url_for('result') }}"><i class="fa fa-arrow-left mr-1"></i> 返回结果</a>
+  </div>
+
+  <div class="space-y-8">
+    {% for s in steps %}
+    <section class="bg-white rounded-lg card-shadow p-4 sm:p-6">
+      <div class="mb-3 audit-head">
+        <h2 class="audit-title" title="{{ s.label }}">{{ s.index }}. {{ s.label }}</h2>
+        <div class="audit-meta">
+          {% if s.rel_path %}
+          <span>文件：<code title="/{{ s.rel_path }}">/{{ s.rel_path }}</code></span>
+          {% endif %}
+          {% if s.line %}
+          <span class="ml-3">定位行：<span class="font-mono">{{ s.line }}</span></span>
+          {% endif %}
+        </div>
+      </div>
+      {% if s.found %}
+      <pre class="overflow-auto bg-gray-50 border border-gray-200 rounded-md p-4 text-sm leading-6"><code>{% for line in s.code_lines %}<span class="code-line"><span class="code-ln">{{ '%5d' % (loop.index0 + s.start_line) }}</span> | {{ line | replace('\t', '    ') }}</span>{% endfor %}</code></pre>
+      {% else %}
+      <div class="text-sm text-gray-500">未能定位到对应函数代码，已省略。</div>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}
