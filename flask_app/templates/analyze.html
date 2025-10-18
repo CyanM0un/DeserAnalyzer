@@ -2,6 +2,10 @@
 
 {% block title %}GCSCAN - 文件分析{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/select.css') }}">
+{% endblock %}
+
 {% block content %}
     <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <!-- 消息提示区域 - 带自动消失功能 -->
@@ -73,15 +77,16 @@
                                 <i class="fa fa-folder-open mr-1"></i> 选择文件
                             </button>
                             
-                            <div class="relative">
-                                <select id="language-select" name="language" class="appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-primary">
+                            <div class="cs-select" id="lang-select-wrap" style="--cs-min-width:12rem; --cs-max-width:18rem;">
+                                <select id="language-select" name="language" class="cs-native" aria-hidden="true">
                                     <option value="">选择语言（目标程序）</option>
                                     <option value="Java">Java</option>
                                     <option value="PHP">PHP</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                                    <i class="fa fa-chevron-down text-xs"></i>
-                                </div>
+                                <button type="button" class="cs-trigger" id="lang-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    选择语言（目标程序）
+                                </button>
+                                <ul class="cs-menu" id="lang-menu" role="listbox" aria-labelledby="lang-trigger"></ul>
                             </div>
                             
                             <button type="submit" id="upload-btn" class="bg-accent text-white px-5 py-2 rounded-md text-sm font-medium btn-hover">
@@ -229,6 +234,41 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        // 语言选择下拉的美化（与结果页一致的样式/交互）
+        (function initLanguageSelect(){
+            const native = document.getElementById('language-select');
+            const wrap = document.getElementById('lang-select-wrap');
+            const trigger = document.getElementById('lang-trigger');
+            const menu = document.getElementById('lang-menu');
+            if (!native || !wrap || !trigger || !menu) return;
+
+            function close(){ menu.classList.remove('show'); trigger.setAttribute('aria-expanded','false'); }
+            function open(){ menu.classList.add('show'); trigger.setAttribute('aria-expanded','true'); }
+            function rebuild(){
+                menu.innerHTML = '';
+                Array.from(native.options).forEach((opt, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'cs-option' + (opt.selected ? ' is-active' : '');
+                    li.setAttribute('role','option');
+                    li.dataset.value = opt.value;
+                    li.textContent = opt.textContent;
+                    li.addEventListener('click', () => {
+                        native.value = opt.value;
+                        trigger.textContent = opt.textContent;
+                        Array.from(menu.children).forEach(c=>c.classList.remove('is-active'));
+                        li.classList.add('is-active');
+                        native.dispatchEvent(new Event('change', { bubbles: true }));
+                        close();
+                    });
+                    menu.appendChild(li);
+                    if (idx === 0) trigger.textContent = opt.textContent;
+                });
+            }
+            trigger.addEventListener('click', ()=> menu.classList.contains('show') ? close() : open());
+            document.addEventListener('click', (e)=>{ if (!wrap.contains(e.target)) close(); });
+            rebuild();
+        })();
+
         // 自动隐藏flash消息
         const flashMessages = document.querySelectorAll('.flash-message');
         

@@ -37,7 +37,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const projectCountEl = document.getElementById('project-count');
   const graphTitleEl = document.getElementById('graph-title');
   const graphMetaEl = document.getElementById('graph-meta');
-  const chainSelect = document.getElementById('chain-select'); // 只声明一次
+  const chainSelect = document.getElementById('chain-select'); // 原生 select（隐藏）
+  const chainWrap = document.getElementById('chain-select-wrap');
+  const chainTrigger = document.getElementById('chain-trigger');
+  const chainMenu = document.getElementById('chain-menu');
+
+  function closeMenu() {
+    if (!chainMenu) return;
+    chainMenu.classList.remove('show');
+    chainTrigger && chainTrigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function openMenu() {
+    if (!chainMenu) return;
+    chainMenu.classList.add('show');
+    chainTrigger && chainTrigger.setAttribute('aria-expanded', 'true');
+  }
+
+  function rebuildMenuFromSelect() {
+    if (!chainMenu || !chainSelect) return;
+    chainMenu.innerHTML = '';
+    Array.from(chainSelect.options).forEach((opt, idx) => {
+      const li = document.createElement('li');
+      li.className = 'cs-option' + (opt.selected ? ' is-active' : '');
+      li.setAttribute('role', 'option');
+      li.dataset.value = opt.value;
+      li.textContent = opt.textContent;
+      li.addEventListener('click', () => {
+        chainSelect.value = opt.value;
+        if (chainTrigger) chainTrigger.textContent = opt.textContent;
+        Array.from(chainMenu.children).forEach(c => c.classList.remove('is-active'));
+        li.classList.add('is-active');
+        chainSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        closeMenu();
+      });
+      chainMenu.appendChild(li);
+      if (idx === 0 && chainTrigger && !chainTrigger.textContent.trim()) {
+        chainTrigger.textContent = opt.textContent;
+      }
+    });
+  }
+
+  if (chainTrigger && chainMenu) {
+    chainTrigger.addEventListener('click', () => {
+      if (chainMenu.classList.contains('show')) closeMenu(); else openMenu();
+    });
+    document.addEventListener('click', (e) => {
+      if (chainWrap && !chainWrap.contains(e.target)) closeMenu();
+    });
+  }
 
   // 渲染项目列表
   function renderProjectList(items) {
@@ -257,8 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const entry = nodes.find(n => n.color === '#10b981');
     if (entry) network.focus(entry.id, { scale: 1.2, animation: true });
   });
-    try { window.__currentProject = p; } catch (e) {}
-    chainSelect.innerHTML = '<option value="all">全部链路</option>';
+  // 删除多余的调试与残留代码，改用统一流程构建下拉
 
   chainSelect.addEventListener('change', (e) => {
     const val = e.target.value;
@@ -271,9 +318,14 @@ document.addEventListener('DOMContentLoaded', () => {
     (p.chains || []).forEach((ch, idx) => {
       const opt = document.createElement('option');
       opt.value = String(idx);
-      opt.textContent = `链 ${idx + 1}: ${ch.entry}`;
+      const label = ch.name ? `链 ${idx + 1}: ${ch.name}` : `链 ${idx + 1}: ${ch.entry}`;
+      opt.textContent = label;
+      opt.title = ch.name ? `入口: ${ch.entry}` : label;
       chainSelect.appendChild(opt);
     });
+    // 重建自定义菜单
+    if (chainTrigger) chainTrigger.textContent = '全部链路';
+    rebuildMenuFromSelect();
     renderGraph(p, 'all');
     updateCharts();
   }
@@ -304,4 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectProject(projects[0]);
     updateCharts();
   }
+
+  // 初次生成菜单（即使没有项目也不会报错）
+  rebuildMenuFromSelect();
 });
