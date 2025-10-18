@@ -513,13 +513,22 @@ def audit():
             # Prefer robust resolver that can handle absolute paths from other machines
             abs_path = _resolve_audit_file(proj_root, raw_path, file_hash) if raw_path else None
             display_rel = None
+            file_name = None
             if abs_path:
                 try:
                     display_rel = os.path.relpath(abs_path, proj_root)
                 except Exception:
                     display_rel = raw_path
+                try:
+                    file_name = os.path.basename(abs_path)
+                except Exception:
+                    file_name = None
             else:
                 display_rel = raw_path
+                try:
+                    file_name = os.path.basename(raw_path) if raw_path else None
+                except Exception:
+                    file_name = None
             snippet = None
             if abs_path and os.path.isfile(abs_path) and line_no:
                 snippet = _extract_function_block(abs_path, line_no, lang=language)
@@ -527,6 +536,7 @@ def audit():
                 'index': i,
                 'label': str(label),
                 'rel_path': display_rel,
+                'file_name': file_name,
                 'line': line_no,
                 'found': bool(snippet),
                 'func_name': snippet.get('func_name') if snippet else None,

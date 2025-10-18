@@ -16,6 +16,10 @@
   /* 行号区域更紧凑 */
   .code-ln { color: #94a3b8; }
   .code-line { white-space: pre; }
+  /* 元信息强调样式 */
+  .meta-label { color: #0F766E; font-weight: 600; }
+  .meta-value { color: #0f172a; }
+  .meta-sep { color: #94a3b8; padding: 0 .25rem; }
 </style>
 {% endblock %}
 
@@ -24,8 +28,22 @@
   <div class="mb-6 flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-primary">在线审计</h1>
-      <p class="text-gray-600 mt-1">项目：{{ meta.project }} · 语言：{{ meta.language }} · 链 {{ meta.chain_index }} / 长度 {{ meta.length }}</p>
-      <p class="text-gray-500 text-sm mt-1">Source：{{ meta.entry }} -> Sink：{{ meta.sink }}</p>
+      <p class="text-gray-700 mt-1">
+        <span class="meta-label">项目：</span><span class="meta-value">{{ meta.project }}</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-label">语言：</span><span class="meta-value">{{ meta.language }}</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-label">链：</span><span class="meta-value">{{ meta.chain_index }}</span>
+        <span class="meta-sep">/</span>
+        <span class="meta-label">长度：</span><span class="meta-value">{{ meta.length }}</span>
+      </p>
+      <p class="text-gray-600 text-sm mt-1">
+        <span class="meta-label">Source：</span><code class="meta-value">{{ meta.entry }}</code>
+        <span class="meta-label"> →</span>
+      </p>
+      <p class="text-gray-600 text-sm mt-1">
+        <span class="meta-label">Sink：</span><code class="meta-value">{{ meta.sink }}</code>
+      </p>
     </div>
     <a class="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium btn-hover" href="{{ url_for('result') }}"><i class="fa fa-arrow-left mr-1"></i> 返回结果</a>
   </div>
@@ -37,7 +55,9 @@
         <h2 class="audit-title" title="{{ s.label }}">{{ s.index }}. {{ s.label }}</h2>
         <div class="audit-meta">
           {% if s.rel_path %}
-          <span>文件：<code title="/{{ s.rel_path }}">/{{ s.rel_path }}</code></span>
+          <span>文件：
+            <code title="/{{ s.rel_path }}">{{ s.file_name or s.rel_path }}</code>
+          </span>
           {% endif %}
           {% if s.line %}
           <span class="ml-3">定位行：<span class="font-mono">{{ s.line }}</span></span>
