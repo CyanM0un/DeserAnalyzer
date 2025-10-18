@@ -32,16 +32,65 @@ app = Flask(__name__, static_url_path='/assets',
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = "GCSCAN"
 
-def get_gc_php(gc_file):
+def get_gc_php(gc_file, proj_root: str, file_hash: str):
+    """读取 PFortifier 的 pop_chains.json，并将绝对路径标准化为
+    以仓库为根的相对路径：/flask_app/uploads/php/<hash>/...
+
+    proj_root 形如：ROOT_DIR/flask_app/uploads/php/<hash>
+    """
     gcs = []
+    anchor = f"/flask_app/uploads/php/{file_hash}/"
+    proj_root_norm = os.path.abspath(proj_root).replace('\\', '/').rstrip('/') + '/'
+
+    def norm_one_path(p: str):
+        if not p:
+            return p
+        s = str(p).replace('\\', '/')
+        # 如果路径里包含仓库内的锚点，直接截取
+        i = s.find(anchor)
+        if i != -1:
+            return s[i:]
+        # 如果是本机绝对路径，并且包含解压根目录，转换为仓库相对
+        if proj_root_norm and proj_root_norm in s:
+            suffix = s.split(proj_root_norm, 1)[1].lstrip('/')
+            return anchor + suffix
+        # 如果只有 uploads/php/<hash> 片段，也补上 /flask_app 前缀
+        pat2 = f"/uploads/php/{file_hash}/"
+        j = s.find(pat2)
+        if j != -1:
+            return "/flask_app" + s[j:]
+        return s
+
     with open(gc_file, "r", encoding="utf-8") as f:
         contents = f.readlines()
-    
-    for content in contents: # TODO 增加更多信息
+
+    for content in contents:  # 一行一个 JSON
+        try:
+            temp = json.loads(content)
+        except Exception:
+            continue
+
         gc = {}
-        temp = json.loads(content)
-        gc["gc_stack"] = temp['funcStack']
-        gc["filepos_stack"] = temp['callStack']
+        gc_stack = temp.get('funcStack')
+        call_stack = temp.get('callStack')
+
+        gc["gc_stack"] = gc_stack
+
+        # 规范化文件定位堆栈：[[path, line], ...]
+        new_fp = []
+        if isinstance(call_stack, list):
+            for it in call_stack:
+                if isinstance(it, (list, tuple)) and len(it) >= 2:
+                    rp = norm_one_path(it[0])
+                    try:
+                        ln = int(it[1])
+                    except Exception:
+                        ln = it[1]
+                    new_fp.append([rp, ln])
+                else:
+                    new_fp.append(it)
+        gc["filepos_stack"] = new_fp
+
         gcs.append(gc)
 
     return gcs
@@ -63,7 +112,8 @@ def gc_scan_php(target, hash, filename):
     for result_dir in os.listdir(results_dir):
         if hash in result_dir: # result
             gc_file = os.path.join(results_dir, result_dir, "pop_chains.json")
-            gcs = get_gc_php(gc_file)
+            # 将 callStack 里的路径规范为 /flask_app/uploads/php/<hash>/... 形式
+            gcs = get_gc_php(gc_file, proj_root=os.path.join(PHP_DIR, hash), file_hash=hash)
     
     # 数据库导入
     if gcs is not None:
@@ -322,6 +372,51 @@ def _safe_rel_join(root, given_path):
         return None
     return cand_abs
 
+def _resolve_audit_file(proj_root: str, raw_path: str, file_hash: str):
+    """Resolve a file path coming from analyzer into a path under proj_root.
+
+    The analyzer may record absolute paths from a different machine root
+    (e.g. /mnt/d/Work/Major/Complete/.../flask_app/uploads/php/<hash>/...).
+    We try to robustly map those to the current uploads directory by:
+    - If the absolute path exists locally and contains the hash, use it.
+    - Otherwise, if the path contains '/<hash>/' (or '\\<hash>\\'), take the
+      suffix after the hash directory and join with proj_root.
+    - Otherwise, fall back to treating it as a relative path under proj_root
+      with traversal protection.
+    """
+    if not raw_path:
+        return None
+    # Normalize separators for searching
+    p = str(raw_path).replace('\\', '/').strip()
+    try:
+        # Case 1: absolute and exists locally
+        if os.path.isabs(p):
+            if os.path.isfile(p):
+                # extra safety: ensure the file belongs to this project hash if provided
+                if file_hash and (f"/{file_hash}/" in p or f"\\{file_hash}\\" in raw_path):
+                    return p
+            # '/flask_app/...' 是以仓库为根的伪绝对路径，拼上 ROOT_DIR
+            if p.startswith('/flask_app/'):
+                cand = os.path.abspath(os.path.join(ROOT_DIR, p.lstrip('/')))
+                if os.path.isfile(cand):
+                    return cand
+            # Case 2: map by <hash> anchor
+            if file_hash:
+                marker = f"/{file_hash}/"
+                pos = p.find(marker)
+                if pos != -1:
+                    suffix = p.split(marker, 1)[1]
+                    cand = os.path.abspath(os.path.join(proj_root, suffix))
+                    if os.path.isfile(cand):
+                        return cand
+        # Case 3: treat as relative under project
+        cand = _safe_rel_join(proj_root, p)
+        if cand and os.path.isfile(cand):
+            return cand
+    except Exception:
+        pass
+    return None
+
 def _extract_function_block(file_path, line_no, lang='PHP', max_scan=400):
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -415,7 +510,8 @@ def audit():
                     line_no = int(filepos[i-1][1])
                 except Exception:
                     pass
-            abs_path = _safe_rel_join(proj_root, raw_path) if raw_path else None
+            # Prefer robust resolver that can handle absolute paths from other machines
+            abs_path = _resolve_audit_file(proj_root, raw_path, file_hash) if raw_path else None
             display_rel = None
             if abs_path:
                 try:
