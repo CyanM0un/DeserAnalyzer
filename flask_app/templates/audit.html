@@ -20,6 +20,285 @@
   .meta-label { color: #0F766E; font-weight: 600; }
   .meta-value { color: #0f172a; }
   .meta-sep { color: #94a3b8; padding: 0 .25rem; }
+  
+  /* 固定按钮样式 */
+  .fixed-btn-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
+  .floating-btn {
+    background: #008080;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .floating-btn:hover {
+    background: #006666;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 128, 128, 0.4);
+  }
+
+  .floating-btn:active {
+    transform: translateY(0);
+  }
+
+  /* AI对话框样式 - 右下角固定小巧版 */
+  .ai-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent; /* 完全透明，不遮挡页面内容 */
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none; /* 穿透点击到下层页面 */
+  }
+
+  .ai-dialog-overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .ai-dialog-container {
+    position: fixed;
+    bottom: 80px; /* 在ASK AI按钮上方 */
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    width: 380px;
+    height: 500px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+    pointer-events: auto; /* 对话框自身可交互 */
+  }
+
+  .ai-dialog-overlay.show .ai-dialog-container {
+    transform: translateY(0) scale(1);
+  }
+
+  .ai-dialog-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .ai-dialog-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0F766E;
+  }
+
+  .ai-dialog-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: #64748b;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .ai-dialog-close:hover {
+    background: #f1f5f9;
+    color: #0F766E;
+  }
+
+  .ai-messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    max-height: 320px;
+  }
+
+  .ai-message {
+    display: flex;
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .ai-message.user {
+    flex-direction: row-reverse;
+  }
+
+  .ai-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #008080;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .ai-message.user .ai-avatar {
+    background: #0F766E;
+  }
+
+  .ai-content {
+    background: #f8fafc;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    max-width: 80%;
+    line-height: 1.4;
+    font-size: 0.875rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    overflow: hidden;
+  }
+
+  .ai-message.user .ai-content {
+    background: #008080;
+    color: white;
+  }
+
+  .ai-input-container {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .ai-input-container textarea {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.5rem;
+    resize: none;
+    font-family: inherit;
+    font-size: 0.875rem;
+    min-height: 36px;
+    max-height: 80px;
+  }
+
+  .ai-input-container textarea:focus {
+    outline: none;
+    border-color: #008080;
+    box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.1);
+  }
+
+  .ai-send-btn {
+    background: #008080;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    align-self: flex-end;
+    white-space: nowrap;
+  }
+
+  .ai-send-btn:hover:not(:disabled) {
+    background: #006666;
+  }
+
+  .ai-send-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 768px) {
+    .fixed-btn-container {
+      bottom: 15px;
+      right: 15px;
+    }
+    
+    .floating-btn {
+      padding: 10px 20px;
+      font-size: 13px;
+    }
+
+    .ai-dialog-container {
+      width: calc(100vw - 30px);
+      height: 400px;
+      max-height: 70vh;
+      bottom: 70px;
+      right: 15px;
+      left: 15px;
+      margin: 0;
+    }
+
+    .ai-content {
+      max-width: 85%;
+      font-size: 0.8125rem;
+    }
+
+    .ai-dialog-header {
+      padding: 0.75rem;
+    }
+
+    .ai-messages-container {
+      padding: 0.75rem;
+      max-height: 260px;
+    }
+
+    .ai-input-container {
+      padding: 0.75rem;
+    }
+
+    .ai-input-container textarea {
+      font-size: 0.8125rem;
+      min-height: 32px;
+    }
+
+    .ai-send-btn {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+  }
+
+  /* 超小屏幕适配 */
+  @media (max-width: 480px) {
+    .ai-dialog-container {
+      width: calc(100vw - 20px);
+      right: 10px;
+      left: 10px;
+      bottom: 65px;
+    }
+    
+    .ai-content {
+      max-width: 90%;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -72,5 +351,371 @@
     </section>
     {% endfor %}
   </div>
+  
+  <!-- 固定按钮容器 -->
+  <div class="fixed-btn-container">
+    <button class="floating-btn" onclick="openAIDialog()">
+      <i class="fa fa-robot mr-1"></i>ASK AI
+    </button>
+  </div>
+
+  <!-- AI对话框 -->
+  <div id="ai-dialog" class="ai-dialog-overlay hidden">
+    <div class="ai-dialog-container">
+      <!-- 标题栏 -->
+      <div class="ai-dialog-header">
+        <h3>AI审计助手</h3>
+        <button class="ai-dialog-close" onclick="closeAIDialog()">×</button>
+      </div>
+      
+      <!-- 消息显示区 -->
+      <div class="ai-messages-container" id="ai-messages">
+        <!-- AI欢迎消息 -->
+        <div class="ai-message">
+          <div class="ai-avatar">🤖</div>
+          <div class="ai-content">
+            我是AI审计助手，可以帮助您分析反序列化漏洞。请问有什么问题？
+          </div>
+        </div>
+      </div>
+      
+      <!-- 输入区域 -->
+      <div class="ai-input-container">
+        <textarea id="ai-input" placeholder="请输入您关于反序列化漏洞的问题..."></textarea>
+        <button class="ai-send-btn" onclick="sendAIMessage()">发送</button>
+      </div>
+    </div>
+  </div>
 </main>
+
+<script>
+// AI对话框功能
+let aiDialog = null;
+let aiMessages = null;
+let aiInput = null;
+let aiSendBtn = null;
+let currentThinkingMessage = null;
+let currentStreamController = null;
+
+// DeepSeek API配置
+const DEEPSEEK_CONFIG = {
+    baseURL: "https://api.siliconflow.cn/v1",
+    model: "deepseek-ai/DeepSeek-V3.2-Exp",
+    // 请在此处填入您的硅基流动API Key
+    apiKey: "sk-nmbkfbgxgysvbwbkegmyhccdwgbusuaqseboyiubekpwoprl"
+};
+
+// 【新增】简易 Markdown 转换函数：处理换行、粗体和行内代码
+function simpleMarkdownToHtml(markdownText) {
+    if (!markdownText) return '';
+    
+    let html = markdownText;
+
+    // 1. 多行代码块（处理语言标识，简单处理，保留换行）
+    // 寻找被 ```[lang]...``` 包裹的内容。
+    // 正则解释：
+    // ```       : 匹配开头的 ```
+    // (\w*)?    : 可选地匹配语言标识 (如 js, php)，并捕获为 $1
+    // \n?       : 可选地匹配紧随其后的换行符
+    // ([\s\S]*?) : 非贪婪地捕获实际的代码内容 (捕获为 $2)
+    // ```       : 匹配结尾的 ```
+    html = html.replace(/```(\w*)?\n?([\s\S]*?)```/g, (match, lang, code) => {
+        // lang 变量会包含 'php', 'javascript' 等（如果存在）
+        // code 变量会包含实际的代码内容
+        
+        // 对代码块内部的换行符进行处理，使其在 <pre> 中正确显示
+        // 注意：这里仅将内部的 <br> 换回 \n，让 <pre> 标签处理其内部的空格和换行
+        const cleanedCode = code.replace(/<br>/g, '\n').trim();
+        
+        // 为了与原页面的代码块样式兼容，不进行行号处理，只使用 <pre><code>
+        // 如果需要，可以根据 lang 变量添加类名，例如：class="... language-${lang}"
+        return `<pre class="overflow-auto bg-gray-100 border border-gray-300 rounded-md p-2 my-2 text-xs leading-5"><code>${cleanedCode}</code></pre>`;
+    });
+
+    // 2. 换行符替换为 <br> (处理完块级元素后)
+    html = html.replace(/\n/g, '<br>');
+
+    // 3. 粗体 **text**
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // 4. 行内代码 `code`
+    html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+    
+    // 5. 列表（简单处理，转换为无序列表）
+    html = html.replace(/<br>\s*(\*|-|\+)\s*(.*?)(?=<br>|$)/g, (match, p1, p2) => {
+        // 尝试转换为 <ul><li> 结构，但需要更复杂的逻辑来处理多行和嵌套
+        // 简单替换为 <li> 标签以进行样式区分
+        return `<br>• ${p2}`;
+    });
+
+    return html;
+}
+
+
+function initAIDialog() {
+    aiDialog = document.getElementById('ai-dialog');
+    aiMessages = document.getElementById('ai-messages');
+    aiInput = document.getElementById('ai-input');
+    aiSendBtn = document.querySelector('.ai-send-btn');
+    
+    // 移除遮罩层点击关闭功能，让用户可以选择页面文字
+    // 只保留关闭按钮的关闭功能
+    
+    // 输入框回车发送消息
+    aiInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAIMessage();
+        }
+    });
+    
+    // 输入框自动调整高度
+    aiInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    
+    // ESC键关闭对话框
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && aiDialog.classList.contains('show')) {
+            closeAIDialog();
+        }
+    });
+}
+
+function openAIDialog() {
+    if (!aiDialog) initAIDialog();
+    
+    aiDialog.classList.remove('hidden');
+    // 使用setTimeout确保CSS过渡生效
+    setTimeout(() => {
+        aiDialog.classList.add('show');
+        aiInput.focus();
+        scrollToLatestMessage();
+    }, 10);
+}
+
+function closeAIDialog() {
+    if (!aiDialog) return;
+    
+    // 取消正在进行的API请求
+    if (currentStreamController) {
+        currentStreamController.abort();
+        currentStreamController = null;
+    }
+    
+    // 移除思考中消息
+    if (currentThinkingMessage) {
+        currentThinkingMessage.remove();
+        currentThinkingMessage = null;
+    }
+    
+    aiDialog.classList.remove('show');
+    setTimeout(() => {
+        aiDialog.classList.add('hidden');
+        setAISendingState(false);
+    }, 300);
+}
+
+function sendAIMessage() {
+    const message = aiInput.value.trim();
+    if (!message) return;
+    
+    // 禁用发送按钮和输入框
+    setAISendingState(true);
+    
+    // 添加用户消息
+    addMessage(message, 'user');
+    aiInput.value = '';
+    aiInput.style.height = 'auto';
+    
+    // 显示AI思考中状态
+    currentThinkingMessage = addMessage('思考中...', 'ai');
+    
+    // 调用DeepSeek API
+    callDeepSeekAPI(message).catch(error => {
+        console.error('AI API调用失败:', error);
+        // 移除思考中消息
+        if (currentThinkingMessage) {
+            currentThinkingMessage.remove();
+            currentThinkingMessage = null;
+        }
+        // 显示错误消息
+        addMessage('抱歉，AI服务暂时不可用。请稍后重试。', 'ai');
+        setAISendingState(false);
+    });
+}
+
+// 设置AI发送状态
+function setAISendingState(isSending) {
+    if (aiSendBtn) {
+        aiSendBtn.disabled = isSending;
+        aiSendBtn.textContent = isSending ? '发送中...' : '发送';
+    }
+    if (aiInput) {
+        aiInput.disabled = isSending;
+    }
+}
+
+// 调用DeepSeek API
+async function callDeepSeekAPI(userMessage) {
+    // 检查API Key
+    if (!DEEPSEEK_CONFIG.apiKey) {
+        throw new Error('API Key未配置');
+    }
+    
+    // 获取审计上下文
+    const auditContext = getAuditContext();
+    
+    // 创建AbortController用于取消请求
+    currentStreamController = new AbortController();
+    
+    const response = await fetch(`${DEEPSEEK_CONFIG.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${DEEPSEEK_CONFIG.apiKey}`
+        },
+        body: JSON.stringify({
+            model: DEEPSEEK_CONFIG.model,
+            messages: [
+                {
+                    role: "system",
+                    content: `你是专业的反序列化漏洞审计助手。当前审计信息：${auditContext}。请严格遵循以下格式要求，基于这些信息提供专业的分析和建议：
+1.  **格式优先**：你的所有回复都必须使用Markdown格式。
+2.  **标题格式**：绝对不要使用 \`#\`、\`##\`、\`###\` 等Hash标题。请使用 \`**粗体文本**\` 或 \`__粗体文本__\` 来代替所有级别的标题。
+3.  **代码展示**：如果需要展示代码，必须使用Markdown的代码块（用三个反引号 \`\`\` 包裹）并指明语言，如 \`\`\`javascript。
+4.  **诚实与谨慎**：如果你不确定某个信息，或信息不足，请明确说明“我不确定”或“无法判断”。不要猜测。对于模糊的结论，必须使用“可能”、“疑似”等审慎措辞。
+5.  **基于事实**：你的所有分析和判断必须且只能基于我提供的“当前审计信息”。如果信息不足，请明确指出缺少什么。绝对不要编造代码、日志或任何技术细节。
+6.  **区分事实与推断**：请清晰地区分哪些是观察到的事实，哪些是你的经验推断。
+7.  **专注专业**：专注于反序列化漏洞的分析，包括漏洞原理、利用方式、修复建议等。`
+                },
+                {
+                    role: "user",
+                    content: userMessage
+                }
+            ],
+            stream: true,
+            temperature: 0.7,
+            max_tokens: 1000
+        }),
+        signal: currentStreamController.signal
+    });
+    
+    if (!response.ok) {
+        throw new Error(`API请求失败: ${response.status}`);
+    }
+    
+    // 移除思考中消息
+    if (currentThinkingMessage) {
+        currentThinkingMessage.remove();
+        currentThinkingMessage = null;
+    }
+    
+    // 创建AI回复消息
+    const aiMessage = addMessage('', 'ai');
+    const aiContent = aiMessage.querySelector('.ai-content');
+    
+    // 处理流式响应
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullResponse = '';
+    
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        if (data.choices[0]?.delta?.content) {
+                            const content = data.choices[0].delta.content;
+                            fullResponse += content;
+                            
+                            // 【修改点】使用 innerHTML 和 Markdown 转换来处理换行和格式
+                            aiContent.innerHTML = simpleMarkdownToHtml(fullResponse); 
+                            
+                            scrollToLatestMessage();
+                        }
+                    } catch (e) {
+                        // 忽略JSON解析错误
+                    }
+                }
+            }
+        }
+    } finally {
+        reader.releaseLock();
+        setAISendingState(false);
+        currentStreamController = null;
+    }
+}
+
+// 获取审计上下文信息
+function getAuditContext() {
+    const meta = {
+        project: document.querySelector('.meta-value:nth-child(1)')?.textContent || '未知项目',
+        language: document.querySelector('.meta-value:nth-child(2)')?.textContent || '未知语言',
+        chainIndex: document.querySelector('.meta-value:nth-child(3)')?.textContent || '未知',
+        length: document.querySelector('.meta-value:nth-child(4)')?.textContent || '未知',
+        entry: document.querySelector('.meta-value:nth-child(5)')?.textContent || '未知',
+        sink: document.querySelector('.meta-value:nth-child(6)')?.textContent || '未知'
+    };
+    
+    // 获取审计步骤信息
+    const steps = [];
+    document.querySelectorAll('section').forEach((section, index) => {
+        const title = section.querySelector('.audit-title')?.textContent || '';
+        const fileInfo = section.querySelector('code')?.textContent || '';
+        const lineInfo = section.querySelector('.font-mono')?.textContent || '';
+        steps.push(`步骤${index + 1}: ${title}, 文件: ${fileInfo}, 行号: ${lineInfo}`);
+    });
+    
+    return `项目: ${meta.project}, 语言: ${meta.language}, 调用链: ${meta.chainIndex}/${meta.length}, Source: ${meta.entry}, Sink: ${meta.sink}. 审计步骤: ${steps.join('; ')}`;
+}
+
+// 【修改点】修改 addMessage，AI消息使用 innerHTML 和 Markdown 转换
+function addMessage(content, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `ai-message ${type}`;
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'ai-avatar';
+    avatar.textContent = type === 'user' ? '👤' : '🤖';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'ai-content';
+    
+    if (type === 'ai') {
+        // AI消息：进行 Markdown 转换和换行处理
+        contentDiv.innerHTML = simpleMarkdownToHtml(content);
+    } else {
+        // 用户消息：防止XSS，使用 textContent
+        contentDiv.textContent = content;
+    }
+    
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(contentDiv);
+    aiMessages.appendChild(messageDiv);
+    
+    scrollToLatestMessage();
+    return messageDiv;
+}
+
+function scrollToLatestMessage() {
+    if (aiMessages) {
+        aiMessages.scrollTop = aiMessages.scrollHeight;
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 预初始化对话框（但不显示）
+    initAIDialog();
+});
+</script>
 {% endblock %}
