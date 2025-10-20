@@ -372,7 +372,40 @@ def _safe_rel_join(root, given_path):
         return None
     return cand_abs
 
-def _resolve_audit_file(proj_root: str, raw_path: str, file_hash: str):
+def _resolve_audit_Java_file(proj_root, raw_path, file_hash):
+    ret = None
+    decompile_dir = os.path.join(proj_root, "decompiled")
+    raw_path = raw_path.replace("/", "\\")
+    raw_path = raw_path.split('$', 1)[0]
+    for root, dirs, files in os.walk(decompile_dir):
+        for file in files:
+            if raw_path in os.path.join(root, file) and file.endswith(".java"):
+                ret = os.path.join(root, file)
+                break
+    if ret is None:
+        jdk_dir = os.path.join(ROOT_DIR, "tools", "java_decompile", "jdk")
+        if not os.path.exists(jdk_dir):
+            os.makedirs(jdk_dir)
+
+            jar_path = os.path.join(ROOT_DIR, "tools", "java", "java-benchmarks", "JREs", "jre1.8", "rt.jar")
+
+            run_cmd = ["cmd", "/c", "jadx.bat", "-d", jdk_dir, jar_path] # windows 若在服务器部署可能需要进行修改
+            tool_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tools", "java_decompile", "bin")
+
+            with subprocess.Popen(run_cmd, cwd=tool_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+                for line in proc.stdout:
+                    print(line, end='')
+                    sys.stdout.flush()
+
+        for root, dirs, files in os.walk(jdk_dir):
+            for file in files:
+                if raw_path in os.path.join(root, file) and file.endswith(".java"):
+                    ret = os.path.join(root, file)
+                    break
+
+    return ret
+
+def _resolve_audit_file(proj_root: str, raw_path: str, file_hash: str, lang):
     """Resolve a file path coming from analyzer into a path under proj_root.
 
     The analyzer may record absolute paths from a different machine root
@@ -386,6 +419,8 @@ def _resolve_audit_file(proj_root: str, raw_path: str, file_hash: str):
     """
     if not raw_path:
         return None
+    if lang == "Java":
+        return _resolve_audit_Java_file(proj_root, raw_path, file_hash)
     # Normalize separators for searching
     p = str(raw_path).replace('\\', '/').strip()
     try:
@@ -511,7 +546,7 @@ def audit():
                 except Exception:
                     pass
             # Prefer robust resolver that can handle absolute paths from other machines
-            abs_path = _resolve_audit_file(proj_root, raw_path, file_hash) if raw_path else None
+            abs_path = _resolve_audit_file(proj_root, raw_path, file_hash, language) if raw_path else None
             display_rel = None
             file_name = None
             if abs_path:
@@ -605,6 +640,8 @@ def analyze():
             os.remove(save_path)
         elif ext == ".jar":
             shutil.move(save_path, extract_dest)
+        
+        decompile_java(extract_dest)
         
         analysis_thread = threading.Thread(
             target=gc_scan,

@@ -20,10 +20,10 @@
                 <div class="col-lg-6 d-flex align-items-center">
                     <div class="text-center text-lg-start">
                         <h2 class="display-4 fw-bold mb-4" style="color: var(--primary-blue);">
-                            Test, Detect, Defend:
+                            Gadget Chain - Detect, Defend:
                         </h2>
                         <p class="lead fs-5" style="color: var(--text-dark);">
-                            Beat Deserialization Risks.
+                            Mitigate Deserialization Risks.
                         </p>
                         <a href="{{ url_for('analyze') }}" class="btn btn-lg mt-3" style="width: 200px; background-color: var(--primary-blue); color: white;">
                             Get Started
@@ -49,7 +49,7 @@
                         <i class="fas fa-search"></i>
                     </div>
                     <h5 class="fw-bold mb-2">漏洞扫描</h5>
-                    <p class="small text-muted">全面检测反序列化漏洞</p>
+                    <p class="small text-muted">全面检测反序列化漏洞利用链</p>
                 </div>
                 
                 <!-- 链接分析 -->
@@ -75,8 +75,8 @@
                     <div class="feature-icon mb-2">
                         <i class="fas fa-file-alt"></i>
                     </div>
-                    <h5 class="fw-bold mb-2">报告生成</h5>
-                    <p class="small text-muted">生成详细检测报告</p>
+                    <h5 class="fw-bold mb-2">宏观统计</h5>
+                    <p class="small text-muted">获得宏观统计结果</p>
                 </div>
             </div>
         </div>
@@ -95,8 +95,8 @@
                     <!-- 左侧索引 -->
                     <div class="tech-nav col-md-3">
                         <ul class="nav-list list-unstyled">
-                            <li class="nav-item active" data-target="tech1">技术1</li>
-                            <li class="nav-item" data-target="tech2">技术2</li>
+                            <li class="nav-item active" data-target="tech1">基于AST模拟执行的PHP Gadget Chain检测</li>
+                            <li class="nav-item" data-target="tech2">基于反序列化引导调用图构建的Java Gadget Chain检测</li>
                         </ul>
                     </div>
                     
@@ -106,10 +106,11 @@
                         <div class="content-item active" id="tech1">
                             <div class="content-header">
                                 <i class="fas fa-code me-3"></i>
-                                <h3 class="tech-title">技术1</h3>
+                                <h3 class="tech-title">基于AST模拟执行的PHP Gadget Chain检测</h3>
                             </div>
                             <div class="tech-desc">
-                                <p>介绍</p>
+                                <p>本系统基于<a href="https://github.com/HACHp1/PFortifier" target="_blank">PFortifier</a>工具进行PHP项目的Gadget Chain检测。PFortifier首先会先解析所有类、trait、接口与方法，建立类→方法和方法名→实现类的映射；随后其基于常见的反序列化入口（__unserialize、__destruct、__wakeup）进行模拟执行并标记可控对象做污点传播。为处理分支与动态调用，PFortifier采用局部变量抽象、分支克隆与贪心合并（优先保留含可控对象的分支）等策略，并通过PM_summary按方法名与参数可控性缓存合并结果与检测到的链以加速分析。</p>
+                                <img src="assets/images/php-workflow.png" alt="PFortifier流程图" style="max-width:100%; height:auto; margin-top:10px;">
                             </div>
                         </div>
                         
@@ -117,10 +118,11 @@
                         <div class="content-item" id="tech2">
                             <div class="content-header">
                                 <i class="fas fa-code me-3"></i>
-                                <h3 class="tech-title">技术2</h3>
+                                <h3 class="tech-title">基于反序列化引导调用图构建的Java Gadget Chain检测</h3>
                             </div>
                             <div class="tech-desc">
-                                <p>介绍</p>
+                                <p>本系统基于<a href="https://github.com/CGCL-codes/Flash" target="_blank">Flash</a>工具进行Java项目的Gadget Chain检测。Flash首先进行可控性分析，以确定变量是否可以通过反序列化来恢复。然后，它应用一种混合分派方法，根据接收变量的可控性在调用点解析被调用者：如果可控，Flash使用更全面但可能精度较低的技术（例如类层次分析法、代理分派）；否则，则应用更精确的技术（例如指针分析）。Flash还通过处理涉及可控变量的反射来恢复缺失的调用边，并过滤掉不相关的边，以提高准确率和效率</p>
+                                <img src="assets/images/java-workflow.jpg" alt="Flash流程图" style="max-width:100%; height:auto; margin-top:10px;">
                             </div>
                         </div>
                     </div>
@@ -158,7 +160,7 @@
                 <div class="col-lg-3 col-md-4 text-center">
                     <div class="lang-card">
                         <i class="fas fa-ellipsis-h fa-3x mb-3" style="color: #5F9EA0;"></i>
-                        <h4>More</h4>
+                        <h4>More to be Supported</h4>
                     </div>
                 </div>
             </div>
@@ -170,7 +172,7 @@
         <div class="container">
             <div class="row justify-content-center mb-5">
                 <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold">Detection Performance</h2>
+                    <h2 class="section-title fw-bold">Performance</h2>
                 </div>
             </div>
             <!-- 滑块-->
@@ -181,18 +183,19 @@
                             <!-- 左侧文字区域 -->
                             <div class="col-lg-6 slider-text">
                                 <div class="text-content">
-                                    <h3 class="section-title">标题</h3>
+                                    <h3 class="section-title">PHP Gadget Chain检测</h3>
                                     <p class="section-desc">
-                                        这就是奥丁，300发子弹，打躯干38，打头95的武器，后座稳定，压制力强还能穿墙，扫头两枪死，甚至每秒能打12发，只要3200块，蹲下能降低后座30发后还无垂直后坐力，然后，学会点位能开局穿死对手，蹲下开镜按住左键就开始啊啊啊啊啊啊！！！！！
+                                        在31个应用中，PFortifier实现了92.93%的漏洞链总覆盖率，并发现了56条新链，相比于现有技术表现出明显优势
+                                    </p>
+                                    <p class="section-desc">
+                                        相关论文"PFortifier: Mitigating PHP Object Injection Through Automatic Patch Generation"已发表在2025 IEEE Symposium on Security and Privacy (SP)
                                     </p>
                                 </div>
                             </div>
                             
                             <!-- 右侧图片区域 -->
                             <div class="col-lg-6 slider-image">
-                                <div class="image-frame aspect-16-9">
-                                    <img src="{{ url_for('static', filename='images/1.png') }}" alt="性能统计图表" class="slider-img">
-                                </div>
+                                <img src="{{ url_for('static', filename='images/php-result.jpg') }}" alt="php结果" class="slider-img">
                             </div>
                         </div>
                     </div>
@@ -203,19 +206,19 @@
                             <!-- 左侧文字区域 -->
                             <div class="col-lg-6 slider-text">
                                 <div class="text-content">
-                                    <h3 class="section-title">新滑块标题</h3>
+                                    <h3 class="section-title">Java Gadget Chain检测</h3>
                                     <p class="section-desc">
-                                        新滑块的描述内容
+                                        在已知漏洞链覆盖方面，Flash在基准测试中检测到56条链中的38条，比现有工具多发现8条；在新漏洞链发现方面，Flash共检测到90条未知的漏洞利用链，比现有最先进方法多出55条，表现最优
                                     </p>
-                                    <!-- 可以添加统计、功能等子内容 -->
+                                    <p class="section-desc">
+                                        相关论文"Precise and effective gadget chain mining through deserialization guided call graph construction"已发表在Proceedings of the 34th USENIX Conference on Security Symposium
+                                    </p>
                                 </div>
                             </div>
                             
                             <!-- 右侧图片区域 -->
                             <div class="col-lg-6 slider-image">
-                                <div class="image-frame aspect-16-9">
-                                    <img src="{{ url_for('static', filename='images/1.png') }}" alt="新滑块图片" class="slider-img">
-                                </div>
+                                <img src="{{ url_for('static', filename='images/java-result.jpg') }}" alt="java结果" class="slider-img">
                             </div>
                         </div>
                     </div> 
@@ -243,56 +246,39 @@
         <div class="container">
             <div class="row justify-content-center mb-5">
                 <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold">About the Team</h2>
+                    <h2 class="section-title fw-bold">Future Research</h2>
                 </div>
             </div>
-            <div class="row g-4">
-                <div class="col-lg-3 col-md-4">
-                    <div class="team-member-card">
-                        <div class="member-avatar">
-                            <img src="{{ url_for('static', filename='images/member1.jpg') }}" alt="团队成员1" class="avatar-img">
+            <div class="row g-4 justify-content-center">
+                <!-- 自动化POC生成 -->
+                <div class="col-lg-5 col-md-8">
+                    <div class="research-card p-5 rounded shadow">
+                        <div class="research-icon mb-4">
+                            <i class="fas fa-bolt fa-3x" style="color: var(--primary-blue);"></i>
                         </div>
-                        <h4>团队成员</h4>
-                        <p class="text-muted">职位信息</p>
-                        <div class="placeholder-content mt-3">
-                            <p>个人简介内容区域</p>
-                        </div>
+                        <h3 class="fw-bold mb-3">自动化POC生成</h3>
+                        <p class="text-muted">
+                            研究基于漏洞利用链特征的自动化POC（Proof of Concept）生成技术，通过分析反序列化漏洞链的调用路径和数据依赖关系，自动构造可验证漏洞存在的测试用例。该技术将结合符号执行与约束求解，实现对复杂漏洞场景的全覆盖验证，降低人工编写POC的门槛，提高漏洞验证效率。
+                        </p>
+                        <p class="mt-3 text-secondary">
+                            预期应用：快速验证检测到的漏洞链有效性，支持一键生成可复现的漏洞验证脚本。
+                        </p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-4">
-                    <div class="team-member-card">
-                        <div class="member-avatar">
-                            <img src="{{ url_for('static', filename='images/member2.jpg') }}" alt="团队成员2" class="avatar-img">
+                
+                <!-- 自动化Patch生成 -->
+                <div class="col-lg-5 col-md-8">
+                    <div class="research-card p-5 rounded shadow">
+                        <div class="research-icon mb-4">
+                            <i class="fas fa-shield-alt fa-3x" style="color: var(--primary-blue);"></i>
                         </div>
-                        <h4>团队成员</h4>
-                        <p class="text-muted">职位信息</p>
-                        <div class="placeholder-content mt-3">
-                            <p>个人简介内容区域</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4">
-                    <div class="team-member-card">
-                        <div class="member-avatar">
-                            <img src="{{ url_for('static', filename='images/member3.jpg') }}" alt="团队成员3" class="avatar-img">
-                        </div>
-                        <h4>团队成员</h4>
-                        <p class="text-muted">职位信息</p>
-                        <div class="placeholder-content mt-3">
-                            <p>个人简介内容区域</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4">
-                    <div class="team-member-card">
-                        <div class="member-avatar">
-                            <img src="{{ url_for('static', filename='images/member4.jpg') }}" alt="团队成员4" class="avatar-img">
-                        </div>
-                        <h4>团队成员</h4>
-                        <p class="text-muted">职位信息</p>
-                        <div class="placeholder-content mt-3">
-                            <p>个人简介内容区域</p>
-                        </div>
+                        <h3 class="fw-bold mb-3">自动化Patch生成</h3>
+                        <p class="text-muted">
+                            探索基于程序分析的自动化修复技术，针对检测到的反序列化漏洞链，自动生成安全补丁。通过识别漏洞链中的关键调用点和可控输入，采用代码注入、参数校验强化、序列化白名单等策略，在不影响程序正常功能的前提下阻断漏洞利用路径。
+                        </p>
+                        <p class="mt-3 text-secondary">
+                            预期应用：提供漏洞修复建议及自动生成的补丁代码，支持一键应用并验证修复效果。
+                        </p>
                     </div>
                 </div>
             </div>
