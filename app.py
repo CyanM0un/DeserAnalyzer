@@ -569,12 +569,32 @@ def _build_audit_context_for_ai(file_hash: str, idx: int = 0):
         lang_dir = PHP_DIR if (language == 'PHP') else JAVA_DIR
         proj_root = os.path.join(lang_dir, file_hash)
         steps = []
-        for i, label in enumerate(stack or [], start=1):
+        for i, label in enumerate(stack or []):  # 0-based，便于与 PHP 的 2:1 映射规则对齐
             raw_path = None; line_no = None
-            if filepos and i-1 < len(filepos) and isinstance(filepos[i-1], (list, tuple)):
+            # 与前端审计保持一致：PHP 前 (N-1) 个 funcStack -> 取 2*i 位置的 callStack；最后一个 funcStack -> 取最后一个 callStack
+            if language == 'PHP' and filepos and isinstance(filepos, list):
                 try:
-                    raw_path = filepos[i-1][0]
-                    line_no = int(filepos[i-1][1])
+                    n_funcs = len(stack or [])
+                    n_fp = len(filepos)
+                    if n_funcs > 0 and n_fp > 0:
+                        if i == n_funcs - 1:
+                            j = max(0, n_fp - 1)
+                        else:
+                            j = min(2 * i, n_fp - 1)
+                        cand = filepos[j] if j < n_fp else None
+                        if isinstance(cand, (list, tuple)) and len(cand) >= 2:
+                            raw_path = cand[0]
+                            try:
+                                line_no = int(cand[1])
+                            except Exception:
+                                line_no = cand[1]
+                except Exception:
+                    pass
+            # 其它语言或兜底：按 1:1 粗略映射
+            if raw_path is None and filepos and i < len(filepos) and isinstance(filepos[i], (list, tuple)):
+                try:
+                    raw_path = filepos[i][0]
+                    line_no = int(filepos[i][1])
                 except Exception:
                     pass
             abs_path = _resolve_audit_file(proj_root, raw_path, file_hash, language) if raw_path else None
@@ -614,7 +634,7 @@ def _build_audit_context_for_ai(file_hash: str, idx: int = 0):
                 except Exception:
                     code_text = None
             steps.append({
-                'index': i,
+                'index': i + 1,
                 'label': str(label),
                 'rel_path': display_rel,
                 'file_name': file_name,
@@ -697,12 +717,32 @@ def audit():
         lang_dir = PHP_DIR if (language == 'PHP') else JAVA_DIR
         proj_root = os.path.join(lang_dir, file_hash)
         steps = []
-        for i, label in enumerate(stack, start=1):
+        for i, label in enumerate(stack):  # i: 0-based
             raw_path = None; line_no = None
-            if filepos and i-1 < len(filepos) and isinstance(filepos[i-1], (list, tuple)):
+            # 针对 PHP：前 (N-1) 个 funcStack 各对应两个 callStack（取第一个），最后一个 funcStack 对应最后一个 callStack
+            if language == 'PHP' and filepos and isinstance(filepos, list):
                 try:
-                    raw_path = filepos[i-1][0]
-                    line_no = int(filepos[i-1][1])
+                    n_funcs = len(stack)
+                    n_fp = len(filepos)
+                    if n_funcs > 0 and n_fp > 0:
+                        if i == n_funcs - 1:
+                            j = max(0, n_fp - 1)
+                        else:
+                            j = min(2 * i, n_fp - 1)
+                        cand = filepos[j] if j < n_fp else None
+                        if isinstance(cand, (list, tuple)) and len(cand) >= 2:
+                            raw_path = cand[0]
+                            try:
+                                line_no = int(cand[1])
+                            except Exception:
+                                line_no = cand[1]
+                except Exception:
+                    pass
+            # 其它语言或兜底：按 1:1 粗略映射
+            if raw_path is None and filepos and i < len(filepos) and isinstance(filepos[i], (list, tuple)):
+                try:
+                    raw_path = filepos[i][0]
+                    line_no = int(filepos[i][1])
                 except Exception:
                     pass
             # Prefer robust resolver that can handle absolute paths from other machines
@@ -748,7 +788,7 @@ def audit():
             if abs_path and os.path.isfile(abs_path) and line_no:
                 snippet = _extract_function_block(abs_path, line_no, lang=language)
             steps.append({
-                'index': i,
+                'index': i + 1,
                 'label': str(label),
                 'rel_path': display_rel,
                 'file_name': file_name,
