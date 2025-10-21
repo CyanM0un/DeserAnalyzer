@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}项目链路 - {{ meta.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .card { background: #fff; border-radius: .75rem; box-shadow: 0 6px 24px rgba(15,23,42,.06); }
+  .chip { display:inline-flex; align-items:center; padding:.125rem .5rem; border-radius:.5rem; font-size:.75rem; background:#f1f5f9; color:#475569; }
+  .btn { display:inline-flex; align-items:center; gap:.375rem; border-radius:.5rem; padding:.375rem .75rem; font-size:.875rem; }
+  .btn-primary{ background:#0ea5e9; color:#fff; }
+  .btn-primary:hover{ background:#0284c7; }
+  .btn-secondary{ background:#14b8a6; color:#fff; }
+  .btn-secondary:hover{ background:#0d9488; }
+  .btn-eq{ min-width:9.5rem; justify-content:center; }
+  .row:hover{ background:#f8fafc; }
+  .break-any{ word-break:break-all; overflow-wrap:anywhere; }
+  .meta-label { color:#0F766E; font-weight:600; }
+  .meta-value { color:#0f172a; }
+  .meta-sep { color:#94a3b8; padding:0 .25rem; }
+  /* 居中 AI 对话弹窗 */
+  .ai-overlay{ position:fixed; inset:0; background:rgba(15,23,42,.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+  .ai-overlay.show{ display:flex; }
+  .ai-modal{ width:min(960px, 90vw); height:60vh; background:#fff; border-radius:12px; box-shadow:0 20px 60px rgba(2,6,23,.2); display:flex; flex-direction:column; overflow:hidden; }
+  .ai-head{ padding:.75rem 1rem; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; }
+  .ai-title{ font-weight:600; color:#0F766E; }
+  .ai-close{ color:#64748b; cursor:pointer; }
+  .ai-msgs{ flex:1; overflow:auto; padding:1rem; background:#fafafa; }
+  .ai-msg{ display:flex; gap:.5rem; margin-bottom:.75rem; }
+  .ai-msg.user{ flex-direction:row-reverse; }
+  .ai-bubble{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:.5rem .75rem; max-width:75%; font-size:.875rem; white-space:pre-wrap; }
+  .ai-msg.user .ai-bubble{ background:#0ea5e9; color:#fff; border-color:transparent; }
+  .thinking{ opacity:.8; }
+  .dots::after{ content:''; display:inline-block; width:1.25em; text-align:left; animation:dots steps(4,end) 1.2s infinite; }
+  @keyframes dots{ 0%{ content:''} 25%{ content:'.'} 50%{ content:'..'} 75%{ content:'...'} 100%{ content:''} }
+  .ai-input{ display:flex; gap:.5rem; padding:.75rem; border-top:1px solid #e2e8f0; }
+  .ai-input textarea{ flex:1; resize:none; min-height:40px; max-height:120px; padding:.5rem; border:1px solid #d1d5db; border-radius:8px; }
+  .ai-input button{ background:#14b8a6; color:#fff; padding:.5rem .9rem; border-radius:.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-primary">项目链路</h1>
+      <p class="text-gray-600 mt-1">
+        <span class="meta-label">项目：</span><span class="meta-value">{{ meta.name }}</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-label">语言：</span><span class="meta-value">{{ meta.language }}</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-label">哈希：</span><code class="meta-value">{{ meta.file_hash }}</code>
+      </p>
+    </div>
+    <a class="btn btn-secondary" href="{{ url_for('analyze') }}"><i class="fa fa-arrow-left"></i> 返回分析</a>
+  </div>
+
+  <section class="card p-4 sm:p-5">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-primary">链路列表</h2>
+      <span class="chip">共 {{ chains|length }} 条</span>
+    </div>
+    <div class="divide-y divide-gray-100">
+      {% if chains and chains|length > 0 %}
+        {% for c in chains %}
+        <div class="row py-3 px-3">
+          <div class="text-xs text-gray-500 mb-2">第 {{ c.index + 1 }} 条链 <span class="ml-2 chip">长度 {{ c.length }}</span></div>
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0 text-base md:text-lg">
+              <span class="meta-label">Source：</span>
+              <span class="break-any text-slate-800">{{ c.entry }}</span>
+            </div>
+            <a class="btn btn-secondary btn-eq shrink-0" href="{{ url_for('audit', hash=meta.file_hash, idx=c.index, lang=meta.language) }}"><i class="fa fa-search"></i> 在线审计</a>
+          </div>
+          <div class="mt-3 flex items-start justify-between gap-4">
+            <div class="min-w-0 text-base md:text-lg">
+              <span class="meta-label">Sink：</span>
+              <span class="break-any text-slate-800">{{ c.sink }}</span>
+            </div>
+            <button class="btn btn-primary btn-eq shrink-0" data-ai-idx="{{ c.index }}"><i class="fa fa-robot"></i> AI 审计</button>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="py-12 text-center text-gray-500">暂无链路数据</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- AI 对话弹窗（居中半屏） -->
+  <div id="ai-overlay" class="ai-overlay">
+    <div class="ai-modal">
+      <div class="ai-head">
+        <div class="ai-title"><i class="fa fa-robot mr-1"></i>AI 审计</div>
+        <span id="ai-close" class="ai-close"><i class="fa fa-close"></i></span>
+      </div>
+      <div id="ai-msgs" class="ai-msgs"></div>
+      <div class="ai-input">
+        <textarea id="ai-input" placeholder="向 AI 提问，Shift+Enter 换行"></textarea>
+        <button id="ai-send"><i class="fa fa-paper-plane"></i> 发送</button>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const BACKEND_AI_ENDPOINT = "/api/ai/audit";
+  let currentIdx = 0;
+  const overlay = document.getElementById('ai-overlay');
+  const msgs = document.getElementById('ai-msgs');
+  const ta = document.getElementById('ai-input');
+  const sendBtn = document.getElementById('ai-send');
+  document.getElementById('ai-close').addEventListener('click', ()=> overlay.classList.remove('show'));
+  overlay.addEventListener('click', (e)=>{ if(e.target.id==='ai-overlay') overlay.classList.remove('show'); });
+
+  function append(role, text){
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + (role==='user' ? 'user' : 'assistant');
+    const bubble = document.createElement('div');
+    bubble.className = 'ai-bubble';
+    bubble.textContent = text;
+    div.appendChild(bubble);
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return bubble;
+  }
+  function openChat(idx){
+    currentIdx = idx;
+    msgs.innerHTML='';
+    ta.value='';
+    overlay.classList.add('show');
+    append('assistant', '我是AI审计助手，可以帮助您分析反序列化漏洞。请问有什么问题？');
+  }
+  async function send(){
+    const q = ta.value.trim();
+    if(!q){ ta.focus(); return; }
+    append('user', q);
+    ta.value='';
+    sendBtn.disabled = true;
+    try{
+      const thinking = append('assistant', '思考中');
+      thinking.classList.add('thinking','dots');
+      const resp = await fetch(BACKEND_AI_ENDPOINT, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ hash: '{{ meta.file_hash }}', idx: currentIdx, question: q }) });
+      const data = await resp.json();
+      // 用回答替换“思考中”气泡
+      thinking.classList.remove('thinking','dots');
+      thinking.textContent = (!resp.ok) ? ((data && (data.error||data.detail)) || '服务异常') : (data.answer || '（AI 暂无输出）');
+    }catch(err){ append('assistant', '请求失败：' + err); }
+    finally{ sendBtn.disabled = false; }
+  }
+  sendBtn.addEventListener('click', send);
+  ta.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+  document.querySelectorAll('button[data-ai-idx]').forEach(btn=> btn.addEventListener('click', ()=> openChat(parseInt(btn.dataset.aiIdx,10)||0)) );
+</script>
+{% endblock %}

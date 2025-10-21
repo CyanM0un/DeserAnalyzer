@@ -160,6 +160,82 @@ def gc_scan(project_path, lang, hash, file_name):
     elif lang == "Java":
         gc_scan_java(project_path, hash, file_name)
 
+def _short_from_label_generic(label: str):
+    if not label:
+        return ''
+    s = str(label)
+    if '#' in s:
+        return s.split('#', 1)[1]
+    if '::' in s:
+        return s.split('::', 1)[1]
+    # Java-like '<Class: ret method(sig)>' 取 method
+    if s.startswith('<') and ':' in s and '(' in s and '>' in s:
+        try:
+            inner = s[1:s.rfind('>')]
+            part = inner.split(':', 1)[1]
+            before_paren = part.split('(', 1)[0]
+            tokens = before_paren.strip().split()
+            if tokens:
+                return tokens[-1]
+        except Exception:
+            pass
+    m = re.search(r"([A-Za-z_$][A-Za-z0-9_$<>]*)\s*(?:\(|$)", s)
+    return m.group(1) if m else s
+
+@app.route('/project')
+def project_view():
+    """单项目链路列表页面：展示每条链的 Source / Sink / 长度，并提供 AI 总结与在线审计入口。"""
+    file_hash = request.args.get('hash')
+    if not file_hash:
+        return redirect(url_for('analyze'))
+    try:
+        conn = get_connect(); conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT filename, language, analysis_result FROM results WHERE file_hash = ?", (file_hash,))
+        row = cur.fetchone(); cur.close(); conn.close()
+        if not row:
+            flash('未找到该项目记录','error')
+            return redirect(url_for('analyze'))
+        filename = row['filename']; language = row['language']
+        name = os.path.splitext(filename)[0]
+        data = json.loads(row['analysis_result']) if row['analysis_result'] else None
+        raw_list = data if isinstance(data, list) else (data.get('chains') if isinstance(data, dict) else [])
+        chains = []
+        if isinstance(raw_list, list):
+            for idx, ch in enumerate(raw_list):
+                entry = ''; sink = ''; length = 0
+                if isinstance(ch, dict):
+                    stack = ch.get('gc_stack') or ch.get('funcStack') or ch.get('path')
+                    if isinstance(stack, list) and stack:
+                        # 展示完整标签，不再取短名
+                        entry = str(stack[0])
+                        sink = str(stack[-1])
+                        length = len(stack)
+                    elif isinstance(ch.get('nodes'), list):
+                        nodes = ch['nodes']
+                        if nodes:
+                            first_label = nodes[0].get('label') or (nodes[0].get('name') if isinstance(nodes[0], dict) else str(nodes[0]))
+                            last_label = nodes[-1].get('label') or (nodes[-1].get('name') if isinstance(nodes[-1], dict) else str(nodes[-1]))
+                            entry = first_label
+                            sink = last_label
+                            length = len(nodes)
+                elif isinstance(ch, list) and ch:
+                    entry = str(ch[0])
+                    sink = str(ch[-1])
+                    length = len(ch)
+                chains.append({
+                    'index': idx,
+                    'entry': entry,
+                    'sink': sink,
+                    'length': length,
+                })
+        meta = { 'file_hash': file_hash, 'name': name, 'language': language, 'filename': filename }
+        return render_template('project.html', meta=meta, chains=chains)
+    except Exception as e:
+        print('project_view error:', e)
+        flash('加载项目失败','error')
+        return redirect(url_for('analyze'))
+
 @app.route('/')
 def index():
     return render_template('index.html')
