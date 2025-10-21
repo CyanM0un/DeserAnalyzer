@@ -397,13 +397,8 @@ let aiSendBtn = null;
 let currentThinkingMessage = null;
 let currentStreamController = null;
 
-// DeepSeek API配置
-const DEEPSEEK_CONFIG = {
-    baseURL: "https://api.siliconflow.cn/v1",
-    model: "deepseek-ai/DeepSeek-V3.2-Exp",
-    // 请在此处填入您的硅基流动API Key
-    apiKey: "sk-nmbkfbgxgysvbwbkegmyhccdwgbusuaqseboyiubekpwoprl"
-};
+// 后端 AI API 网关（MCP风格：前端只负责收集上下文并向后端发问，后端整合上下文与模型调用）
+const BACKEND_AI_ENDPOINT = "/api/ai/audit";
 
 // 【新增】简易 Markdown 转换函数：处理换行、粗体和行内代码
 function simpleMarkdownToHtml(markdownText) {
@@ -532,8 +527,8 @@ function sendAIMessage() {
     // 显示AI思考中状态
     currentThinkingMessage = addMessage('思考中...', 'ai');
     
-    // 调用DeepSeek API
-    callDeepSeekAPI(message).catch(error => {
+  // 调用后端 AI 接口
+  callBackendAI(message).catch(error => {
         console.error('AI API调用失败:', error);
         // 移除思考中消息
         if (currentThinkingMessage) {
@@ -557,102 +552,38 @@ function setAISendingState(isSending) {
     }
 }
 
-// 调用DeepSeek API
-async function callDeepSeekAPI(userMessage) {
-    // 检查API Key
-    if (!DEEPSEEK_CONFIG.apiKey) {
-        throw new Error('API Key未配置');
-    }
-    
-    // 获取审计上下文
-    const auditContext = getAuditContext();
-    
-    // 创建AbortController用于取消请求
-    currentStreamController = new AbortController();
-    
-    const response = await fetch(`${DEEPSEEK_CONFIG.baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${DEEPSEEK_CONFIG.apiKey}`
-        },
-        body: JSON.stringify({
-            model: DEEPSEEK_CONFIG.model,
-            messages: [
-                {
-                    role: "system",
-                    content: `你是专业的反序列化漏洞审计助手。当前审计信息：${auditContext}。请严格遵循以下格式要求，基于这些信息提供专业的分析和建议：
-1.  **格式优先**：你的所有回复都必须使用Markdown格式。
-2.  **标题格式**：绝对不要使用 \`#\`、\`##\`、\`###\` 等Hash标题。请使用 \`**粗体文本**\` 或 \`__粗体文本__\` 来代替所有级别的标题。
-3.  **代码展示**：如果需要展示代码，必须使用Markdown的代码块（用三个反引号 \`\`\` 包裹）并指明语言，如 \`\`\`javascript。
-4.  **诚实与谨慎**：如果你不确定某个信息，或信息不足，请明确说明“我不确定”或“无法判断”。不要猜测。对于模糊的结论，必须使用“可能”、“疑似”等审慎措辞。
-5.  **基于事实**：你的所有分析和判断必须且只能基于我提供的“当前审计信息”。如果信息不足，请明确指出缺少什么。绝对不要编造代码、日志或任何技术细节。
-6.  **区分事实与推断**：请清晰地区分哪些是观察到的事实，哪些是你的经验推断。
-7.  **专注专业**：专注于反序列化漏洞的分析，包括漏洞原理、利用方式、修复建议等。`
-                },
-                {
-                    role: "user",
-                    content: userMessage
-                }
-            ],
-            stream: true,
-            temperature: 0.7,
-            max_tokens: 1000
-        }),
-        signal: currentStreamController.signal
-    });
-    
-    if (!response.ok) {
-        throw new Error(`API请求失败: ${response.status}`);
-    }
-    
-    // 移除思考中消息
-    if (currentThinkingMessage) {
-        currentThinkingMessage.remove();
-        currentThinkingMessage = null;
-    }
-    
-    // 创建AI回复消息
-    const aiMessage = addMessage('', 'ai');
-    const aiContent = aiMessage.querySelector('.ai-content');
-    
-    // 处理流式响应
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let fullResponse = '';
-    
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
-            
-            for (const line of lines) {
-                if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                    try {
-                        const data = JSON.parse(line.slice(6));
-                        if (data.choices[0]?.delta?.content) {
-                            const content = data.choices[0].delta.content;
-                            fullResponse += content;
-                            
-                            // 【修改点】使用 innerHTML 和 Markdown 转换来处理换行和格式
-                            aiContent.innerHTML = simpleMarkdownToHtml(fullResponse); 
-                            
-                            scrollToLatestMessage();
-                        }
-                    } catch (e) {
-                        // 忽略JSON解析错误
-                    }
-                }
-            }
-        }
-    } finally {
-        reader.releaseLock();
-        setAISendingState(false);
-        currentStreamController = null;
-    }
+// 调用后端 AI 接口
+async function callBackendAI(userMessage) {
+  // 读取 URL 中的 hash 和 idx 以便后端精确取数
+  const url = new URL(window.location.href);
+  const hash = url.searchParams.get('hash');
+  const idx = parseInt(url.searchParams.get('idx') || '0', 10);
+
+  currentStreamController = new AbortController();
+  const resp = await fetch(BACKEND_AI_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hash, idx, question: userMessage }),
+    signal: currentStreamController.signal
+  });
+  let data;
+  try {
+    data = await resp.json();
+  } catch (e) {
+    data = null;
+  }
+  if (!resp.ok) {
+    const detail = data && (data.detail || data.error || JSON.stringify(data));
+    throw new Error('后端AI接口失败: ' + resp.status + (detail ? (' - ' + detail) : ''));
+  }
+  if (currentThinkingMessage) {
+    currentThinkingMessage.remove();
+    currentThinkingMessage = null;
+  }
+  const answer = data.answer || '（无回复）';
+  addMessage(answer, 'ai');
+  setAISendingState(false);
+  currentStreamController = null;
 }
 
 // 获取审计上下文信息

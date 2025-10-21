@@ -15,6 +15,14 @@
 
 本系统还支持在线代码审计，及AI辅助审计
 
+### AI 配置
+根目录下放置`.env`文件，配置AI辅助审计：
+```
+AI_BASE_URL=https://api.siliconflow.cn/v1
+AI_MODEL=deepseek-ai/DeepSeek-V3.2-Exp
+AI_API_KEY=sk-yourkey
+```
+
 ### 论文支撑
 本系统基于如下的Gadget Chain检测工具进行开发：
 - PFortifier: Mitigating PHP Object Injection Through Automatic Patch Generation，发表于2025 IEEE Symposium on Security and Privacy (SP)

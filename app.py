@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 from utils import *
 from database import *
@@ -10,6 +10,8 @@ import shutil
 import sys
 import sqlite3
 import re
+import requests
+from dotenv import load_dotenv
 
 # 以当前文件位置为根目录，避免相对路径问题
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -31,6 +33,12 @@ app = Flask(__name__, static_url_path='/assets',
             template_folder=os.path.join(ROOT_DIR, 'flask_app', 'templates'))
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = "GCSCAN"
+
+# 加载根目录的 .env（若存在），以便读取 AI_BASE_URL/AI_MODEL/AI_API_KEY 等配置
+try:
+    load_dotenv(os.path.join(ROOT_DIR, '.env'))
+except Exception:
+    pass
 
 def get_gc_php(gc_file, proj_root: str, file_hash: str):
     """读取 PFortifier 的 pop_chains.json，并将绝对路径标准化为
@@ -529,6 +537,130 @@ def _extract_function_block(file_path, line_no, lang='PHP', max_scan=400):
     e = min(n, end + 1)
     return {'func_name': func_name, 'start_line': s+1, 'end_line': e, 'code_lines': lines[s:e]}
 
+# ===== AI 辅助：构造审计上下文供后端调用大模型 =====
+def _build_audit_context_for_ai(file_hash: str, idx: int = 0):
+    """根据 file_hash 与链索引，复用审计逻辑组装上下文（meta + steps + 代码片段）。
+    返回 (meta, steps)
+    """
+    try:
+        conn = get_connect(); conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT filename, language, analysis_result FROM results WHERE file_hash = ?", (file_hash,))
+        row = cur.fetchone(); cur.close(); conn.close()
+        if not row:
+            return None, []
+        language = row['language']
+        name = os.path.splitext(row['filename'])[0]
+        data = json.loads(row['analysis_result']) if row['analysis_result'] else None
+        raw_list = data if isinstance(data, list) else (data.get('chains') if isinstance(data, dict) else [])
+        if not raw_list:
+            return {'project': name, 'language': language, 'chain_index': 0, 'length': 0, 'entry': '', 'sink': ''}, []
+        idx = max(0, min(idx, len(raw_list) - 1))
+        ch = raw_list[idx]
+        if isinstance(ch, dict):
+            stack = ch.get('gc_stack') or ch.get('funcStack') or ch.get('path') or ch.get('nodes')
+            if isinstance(stack, list) and stack and isinstance(stack[0], dict):
+                stack = [ (n.get('label') or n.get('name') or str(n)) for n in stack ]
+            filepos = ch.get('filepos_stack') if isinstance(ch.get('filepos_stack'), list) else None
+        elif isinstance(ch, list):
+            stack = ch; filepos = None
+        else:
+            stack = None; filepos = None
+        lang_dir = PHP_DIR if (language == 'PHP') else JAVA_DIR
+        proj_root = os.path.join(lang_dir, file_hash)
+        steps = []
+        for i, label in enumerate(stack or [], start=1):
+            raw_path = None; line_no = None
+            if filepos and i-1 < len(filepos) and isinstance(filepos[i-1], (list, tuple)):
+                try:
+                    raw_path = filepos[i-1][0]
+                    line_no = int(filepos[i-1][1])
+                except Exception:
+                    pass
+            abs_path = _resolve_audit_file(proj_root, raw_path, file_hash, language) if raw_path else None
+            display_rel = None; file_name = None
+            if abs_path:
+                try:
+                    display_rel = os.path.relpath(abs_path, proj_root)
+                except Exception:
+                    display_rel = raw_path
+                # 与前端显示一致：隐藏 decompiled/
+                try:
+                    if language == 'Java' and display_rel:
+                        rel_norm = str(display_rel).replace('\\', '/')
+                        if rel_norm.startswith('decompiled/'):
+                            display_rel = rel_norm[len('decompiled/') :]
+                        elif rel_norm.startswith('/decompiled/'):
+                            display_rel = rel_norm[len('/decompiled/') :]
+                except Exception:
+                    pass
+                try:
+                    file_name = os.path.basename(abs_path)
+                except Exception:
+                    file_name = None
+            else:
+                display_rel = raw_path
+                try:
+                    file_name = os.path.basename(raw_path) if raw_path else None
+                except Exception:
+                    file_name = None
+            snippet = None
+            if abs_path and os.path.isfile(abs_path) and line_no:
+                snippet = _extract_function_block(abs_path, line_no, lang=language)
+            code_text = None
+            if snippet and snippet.get('code_lines'):
+                try:
+                    code_text = ''.join(snippet['code_lines'])
+                except Exception:
+                    code_text = None
+            steps.append({
+                'index': i,
+                'label': str(label),
+                'rel_path': display_rel,
+                'file_name': file_name,
+                'line': line_no,
+                'func_name': snippet.get('func_name') if snippet else None,
+                'code': code_text
+            })
+        meta = {
+            'project': name,
+            'language': language,
+            'chain_index': (idx + 1),
+            'length': len(stack or []),
+            'entry': str(stack[0]) if stack else '',
+            'sink': str(stack[-1]) if stack else ''
+        }
+        return meta, steps
+    except Exception:
+        return None, []
+
+def _format_ai_context_text(meta, steps):
+    if not meta:
+        return '无可用审计上下文'
+    lines = []
+    lines.append(f"项目: {meta.get('project')} | 语言: {meta.get('language')} | 链: {meta.get('chain_index')}/{meta.get('length')}")
+    lines.append(f"Entry: {meta.get('entry')}")
+    lines.append(f"Sink: {meta.get('sink')}")
+    for s in steps[:20]:  # 限制最多20步，避免提示过长
+        code_info = ''
+        if s.get('code'):
+            # 截断代码，避免过大
+            snippet = s['code']
+            if len(snippet) > 2000:
+                snippet = snippet[:2000] + '\n...<truncated>\n'
+            code_info = f"\n代码片段(函数: {s.get('func_name') or '未知'}):\n" + snippet
+        lines.append(f"步骤{s['index']}: {s.get('label')} | 文件: {s.get('rel_path')} | 行: {s.get('line')}" + code_info)
+    return "\n".join(lines)
+
+def _call_openai_compatible(base_url, api_key, model, messages, temperature=0.2, max_tokens=1200):
+    url = base_url.rstrip('/') + '/chat/completions'
+    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+    payload = { 'model': model, 'messages': messages, 'temperature': temperature, 'max_tokens': max_tokens }
+    resp = requests.post(url, headers=headers, json=payload, timeout=60)
+    resp.raise_for_status()
+    data = resp.json()
+    return data.get('choices', [{}])[0].get('message', {}).get('content', '')
+
 @app.route('/audit')
 def audit():
     file_hash = request.args.get('hash')
@@ -639,6 +771,57 @@ def audit():
     except Exception as e:
         print('audit error:', e)
         return render_template('audit.html', meta={'project':'错误','language':lang or '未知','chain_index':0,'length':0,'entry':'','sink':''}, steps=[])
+
+# === AI 后端接口：读取前端页面对应的数据并调用大模型 ===
+@app.route('/api/ai/audit', methods=['POST'])
+def api_ai_audit():
+    try:
+        payload = request.get_json(silent=True) or {}
+        file_hash = payload.get('hash') or request.args.get('hash')
+        idx = int(payload.get('idx') or request.args.get('idx') or 0)
+        question = (payload.get('question') or '').strip()
+        if not file_hash:
+            return jsonify({'error': 'missing hash'}), 400
+        meta, steps = _build_audit_context_for_ai(file_hash, idx)
+        ctx = _format_ai_context_text(meta, steps)
+
+        # 读取环境变量配置，默认使用硅基流动 DeepSeek 兼容接口
+        base_url = os.environ.get('AI_BASE_URL', 'https://api.siliconflow.cn/v1')
+        api_key = os.environ.get('AI_API_KEY', '')
+        model = os.environ.get('AI_MODEL', 'deepseek-ai/DeepSeek-V3.2-Exp')
+        if not api_key:
+            return jsonify({
+                'error': 'AI 服务未配置',
+                'detail': '服务器未设置 AI_API_KEY 环境变量，请在后端设置后重启服务。',
+                'fix': 'export AI_API_KEY=xxxx （可选：AI_BASE_URL、AI_MODEL）'
+            }), 503
+
+        sys_prompt = (
+            "你是专业的反序列化漏洞审计助手。以下是后端收集到的审计上下文（包含链路与相关代码片段）。\n"
+            "请基于这些信息进行回答，严格区分事实与推断，如信息不足请直言。\n"
+        ) + ctx
+        messages = [
+            { 'role': 'system', 'content': sys_prompt },
+            { 'role': 'user', 'content': question or '请基于当前上下文给出你的分析与修复建议。' }
+        ]
+        answer = _call_openai_compatible(base_url, api_key, model, messages)
+        return jsonify({'answer': answer, 'meta': meta}), 200
+    except requests.HTTPError as e:
+        try:
+            err_json = e.response.json()
+        except Exception:
+            err_json = None
+        return jsonify({'error': f'AI HTTP {e.response.status_code}', 'detail': err_json}), 502
+    except Exception as e:
+        return jsonify({'error': 'server error', 'detail': str(e)}), 500
+
+@app.route('/api/ai/health', methods=['GET'])
+def api_ai_health():
+    return jsonify({
+        'AI_BASE_URL': os.environ.get('AI_BASE_URL', 'https://api.siliconflow.cn/v1'),
+        'AI_MODEL': os.environ.get('AI_MODEL', 'deepseek-ai/DeepSeek-V3.2-Exp'),
+        'AI_API_KEY_configured': bool(os.environ.get('AI_API_KEY'))
+    })
 
 @app.route("/analyze", methods=["GET", "POST"])
 def analyze():
