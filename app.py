@@ -373,35 +373,63 @@ def _safe_rel_join(root, given_path):
     return cand_abs
 
 def _resolve_audit_Java_file(proj_root, raw_path, file_hash):
+    def norm(p: str) -> str:
+        return str(p).replace('\\', '/').rstrip('/')
+
     ret = None
     decompile_dir = os.path.join(proj_root, "decompiled")
-    raw_path = raw_path.replace("/", "\\")
-    raw_path = raw_path.split('$', 1)[0]
+
+    # Normalize incoming path and drop inner-class suffix like Foo$1.java
+    raw_norm = norm(raw_path).split('$', 1)[0]
+
+    # Look up inside project decompiled folder first
     for root, dirs, files in os.walk(decompile_dir):
         for file in files:
-            if raw_path in os.path.join(root, file) and file.endswith(".java"):
-                ret = os.path.join(root, file)
+            if not file.endswith(".java"):
+                continue
+            full = os.path.join(root, file)
+            if raw_norm in norm(full):
+                ret = full
                 break
+        if ret:
+            break
+
     if ret is None:
         jdk_dir = os.path.join(ROOT_DIR, "tools", "java_decompile", "jdk")
         if not os.path.exists(jdk_dir):
-            os.makedirs(jdk_dir)
+            os.makedirs(jdk_dir, exist_ok=True)
 
-            jar_path = os.path.join(ROOT_DIR, "tools", "java", "java-benchmarks", "JREs", "jre1.8", "rt.jar")
+            jar_path = os.path.join(
+                ROOT_DIR, "tools", "java", "java-benchmarks", "JREs", "jre1.8", "rt.jar"
+            )
 
-            run_cmd = ["cmd", "/c", "jadx.bat", "-d", jdk_dir, jar_path] # windows 若在服务器部署可能需要进行修改
-            tool_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tools", "java_decompile", "bin")
+            tool_dir = os.path.join(
+                os.path.abspath(os.path.dirname(__file__)), "tools", "java_decompile", "bin"
+            )
 
-            with subprocess.Popen(run_cmd, cwd=tool_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+            # Choose the correct jadx launcher per platform
+            if os.name == 'nt':
+                run_cmd = ["cmd", "/c", "jadx.bat", "-d", jdk_dir, jar_path]
+            else:
+                run_cmd = ["./jadx", "-d", jdk_dir, jar_path]
+
+            with subprocess.Popen(
+                run_cmd, cwd=tool_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+            ) as proc:
                 for line in proc.stdout:
                     print(line, end='')
                     sys.stdout.flush()
 
         for root, dirs, files in os.walk(jdk_dir):
             for file in files:
-                if raw_path in os.path.join(root, file) and file.endswith(".java"):
-                    ret = os.path.join(root, file)
+                if not file.endswith(".java"):
+                    continue
+                full = os.path.join(root, file)
+                if raw_norm in norm(full):
+                    ret = full
                     break
+            if ret:
+                break
 
     return ret
 
@@ -554,12 +582,32 @@ def audit():
                     display_rel = os.path.relpath(abs_path, proj_root)
                 except Exception:
                     display_rel = raw_path
+                # For Java, hide leading 'decompiled/' folder in display only
+                try:
+                    if language == 'Java' and display_rel:
+                        rel_norm = str(display_rel).replace('\\', '/')
+                        if rel_norm.startswith('decompiled/'):
+                            display_rel = rel_norm[len('decompiled/'):]
+                        elif rel_norm.startswith('/decompiled/'):
+                            display_rel = rel_norm[len('/decompiled/'):]
+                except Exception:
+                    pass
                 try:
                     file_name = os.path.basename(abs_path)
                 except Exception:
                     file_name = None
             else:
                 display_rel = raw_path
+                # Also handle the case where raw_path already has a leading '/decompiled/'
+                try:
+                    if language == 'Java' and display_rel:
+                        rel_norm = str(display_rel).replace('\\', '/')
+                        if rel_norm.startswith('decompiled/'):
+                            display_rel = rel_norm[len('decompiled/'):]
+                        elif rel_norm.startswith('/decompiled/'):
+                            display_rel = rel_norm[len('/decompiled/'):]
+                except Exception:
+                    pass
                 try:
                     file_name = os.path.basename(raw_path) if raw_path else None
                 except Exception:

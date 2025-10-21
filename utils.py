@@ -67,12 +67,24 @@ def decompile_java(save_path):
     os.makedirs(output_dir, exist_ok=True)
 
     for jar in jar_files:
-        jar_path = os.path.join(save_path, jar)
+        # 'jar' is already an absolute path from os.walk
+        jar_path = jar
         jar_output = os.path.join(output_dir, os.path.splitext(os.path.basename(jar))[0])
         os.makedirs(jar_output, exist_ok=True)
 
-        run_cmd = ["cmd", "/c", "jadx.bat", "-d", jar_output, jar_path] # windows 若在服务器部署可能需要进行修改
         tool_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tools", "java_decompile", "bin")
+        # Choose the correct launcher per platform
+        if os.name == 'nt':
+            run_cmd = ["cmd", "/c", "jadx.bat", "-d", jar_output, jar_path]
+        else:
+            run_cmd = ["./jadx", "-d", jar_output, jar_path]
+            # Try to ensure executable permission (best-effort; ignore failures)
+            try:
+                jadx_path = os.path.join(tool_dir, "jadx")
+                if os.path.exists(jadx_path):
+                    os.chmod(jadx_path, os.stat(jadx_path).st_mode | 0o111)
+            except Exception:
+                pass
 
         with subprocess.Popen(run_cmd, cwd=tool_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
             for line in proc.stdout:
