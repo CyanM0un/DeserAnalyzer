@@ -96,16 +96,23 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     projectCountEl.textContent = `${items.length} 个`;
+    const projUrl = (document.getElementById('project-btn')?.dataset.projectUrl) || '/project';
     items.forEach((p, idx) => {
       const el = document.createElement('div');
       el.className = 'py-3 px-2 cursor-pointer list-hover';
+      const hash = encodeURIComponent(p.file_hash || '');
       el.innerHTML = `
         <div class="flex items-center justify-between">
           <div>
             <div class="text-sm font-medium text-gray-900">${p.name}</div>
             <div class="text-xs text-gray-500 mt-0.5">语言：${p.language} · 链：${p.chains?.length || 0}</div>
           </div>
-          <div class="chip">${idx + 1}</div>
+          <div class="flex items-center gap-2">
+            <a class="text-primary text-xs hover:text-accent" href="${projUrl}?hash=${hash}" onclick="event.stopPropagation()">
+              <i class="fa fa-list-alt mr-0.5"></i> 项目分析
+            </a>
+            <div class="chip">${idx + 1}</div>
+          </div>
         </div>`;
       el.addEventListener('click', () => selectProject(p));
       projectListEl.appendChild(el);
@@ -314,6 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function selectProject(p) {
     currentProject = p;
+    // 更新“项目分析”按钮的可用性
+    const projBtn = document.getElementById('project-btn');
+    if (projBtn) {
+      projBtn.disabled = !p?.file_hash;
+      projBtn.classList.toggle('opacity-50', !p?.file_hash);
+    }
     chainSelect.innerHTML = '<option value="all">全部链路</option>';
     (p.chains || []).forEach((ch, idx) => {
       const opt = document.createElement('option');
@@ -346,6 +359,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const auditUrl = auditBtn.dataset.auditUrl || '/audit';
         window.location.href = `${auditUrl}?${params.toString()}`;
+      });
+    }
+
+    // 项目分析：跳转到 /project?hash=...
+    const projBtn = document.getElementById('project-btn');
+    if (projBtn) {
+      projBtn.addEventListener('click', () => {
+        if (!currentProject || !currentProject.file_hash) return;
+        const url = projBtn.dataset.projectUrl || '/project';
+        const params = new URLSearchParams({ hash: currentProject.file_hash });
+        window.location.href = `${url}?${params.toString()}`;
       });
     }
 

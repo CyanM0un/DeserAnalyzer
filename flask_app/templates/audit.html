@@ -324,7 +324,12 @@
         <span class="meta-label">Sink：</span><code class="meta-value">{{ meta.sink }}</code>
       </p>
     </div>
-    <a class="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium btn-hover" href="{{ url_for('result') }}"><i class="fa fa-arrow-left mr-1"></i> 返回结果</a>
+    <div class="flex items-center gap-2">
+      <a class="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium btn-hover" href="{{ url_for('result') }}"><i class="fa fa-arrow-left mr-1"></i> 返回结果</a>
+      <a class="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium btn-hover" href="{{ url_for('project_view') }}?hash={{ request.args.get('hash') | urlencode }}">
+        <i class="fa fa-list-alt mr-1"></i> 项目分析
+      </a>
+    </div>
   </div>
 
   <div class="space-y-8">
