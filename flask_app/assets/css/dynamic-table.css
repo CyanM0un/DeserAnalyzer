@@ -1,0 +1,150 @@
+/* 动态表格样式 */
+.dynamic-table-container {
+    position: relative;
+    height: 400px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+
+
+
+
+/* 表格包装器 */
+.table-wrapper {
+    position: relative;
+    height: 100%;
+    overflow: auto;
+    transform-origin: 0 0;
+    transition: transform 0.3s ease;
+}
+
+/* 动态表格样式 */
+.dynamic-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 14px;
+    min-width: 100%;
+}
+
+.dynamic-table th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.dynamic-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e9ecef;
+    color: #6c757d;
+}
+
+.dynamic-table tr:hover {
+    background: #f8f9fa;
+}
+
+/* 数据状态样式 */
+.data-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-high {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-low {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* 虚拟滚动优化 */
+.virtual-scroll {
+    position: relative;
+}
+
+.virtual-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+    .dynamic-table-container {
+        height: 300px;
+    }
+    
+    .dynamic-table th,
+    .dynamic-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+    
+
+}
+
+/* 加载状态 */
+.table-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
+    font-size: 16px;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 空状态 */
+.table-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
+    font-size: 16px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #dee2e6;
+}
