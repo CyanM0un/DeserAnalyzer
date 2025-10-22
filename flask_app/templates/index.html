@@ -169,17 +169,17 @@
     </section>
 
     <!-- 技术简介 -->
-    <section class="section">
-        <div class="container">
-            <div class="row justify-content-center mb-5">
-                <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold">技术概要</h2>
+    <section class="section" style="padding: 80px 20px; margin: 0 auto; max-width: 1600px;">
+        <div class="container-fluid">  <!-- 全宽容器，避免固定宽度限制 -->
+            <div class="row justify-content-center mb-10">
+                <div class="col-lg-12 text-center">
+                    <h2 class="section-title fw-bold" style="font-size: 2.2rem;">技术概要</h2>
                 </div>
                 
                 <!-- 技术介绍模块 -->
-                <div class="tech-intro-container row mt-5">
+                <div class="tech-intro-container row mt-10" style="width: 100%;">
                     <!-- 左侧索引 -->
-                    <div class="tech-nav col-md-3">
+                    <div class="tech-nav col-lg-2 col-md-3" style="padding: 40px 20px; font-size: 1.1rem;">
                         <ul class="nav-list list-unstyled">
                             <li class="nav-item active" data-target="tech1">基于AST模拟执行的PHP Gadget Chain检测</li>
                             <li class="nav-item" data-target="tech2">基于反序列化引导调用图构建的Java Gadget Chain检测</li>
@@ -187,28 +187,28 @@
                     </div>
                     
                     <!-- 右侧内容 -->
-                    <div class="tech-content col-md-9">
+                    <div class="tech-content col-lg-10 col-md-9" style="padding: 40px; overflow: visible;">
                         <!-- 技术1 -->
                         <div class="content-item active" id="tech1">
                             <div class="content-header">
-                                <i class="fas fa-code me-3"></i>
-                                <h3 class="tech-title">基于AST模拟执行的PHP Gadget Chain检测</h3>
+                                <i class="fas fa-code me-3" style="font-size: 1.5rem;"></i>
+                                <h3 class="tech-title" style="font-size: 1.8rem;">基于AST模拟执行的PHP Gadget Chain检测</h3>
                             </div>
-                            <div class="tech-desc">
+                            <div class="tech-desc" style="margin-top: 30px; line-height: 2.0; font-size: 1.1rem;">
                                 <p>本系统基于<a href="https://github.com/HACHp1/PFortifier" target="_blank">PFortifier</a>工具进行PHP项目的Gadget Chain检测。PFortifier首先会先解析所有类、trait、接口与方法，建立类→方法和方法名→实现类的映射；随后其基于常见的反序列化入口（__unserialize、__destruct、__wakeup）进行模拟执行并标记可控对象做污点传播。为处理分支与动态调用，PFortifier采用局部变量抽象、分支克隆与贪心合并（优先保留含可控对象的分支）等策略，并通过PM_summary按方法名与参数可控性缓存合并结果与检测到的链以加速分析。</p>
-                                <img src="assets/images/php-workflow.png" alt="PFortifier流程图" style="max-width:100%; height:auto; margin-top:10px;">
+                                <img src="assets/images/php-workflow.png" alt="PFortifier" style="max-width: 100%; height: auto; margin: 30px 0; border: 1px solid #eee; padding: 15px; background-color: #fff;">
                             </div>
                         </div>
                         
                         <!-- 技术2 -->
                         <div class="content-item" id="tech2">
                             <div class="content-header">
-                                <i class="fas fa-code me-3"></i>
-                                <h3 class="tech-title">基于反序列化引导调用图构建的Java Gadget Chain检测</h3>
+                                <i class="fas fa-code me-3" style="font-size: 1.5rem;"></i>
+                                <h3 class="tech-title" style="font-size: 1.8rem;">基于反序列化引导调用图构建的Java Gadget Chain检测</h3>
                             </div>
-                            <div class="tech-desc">
+                            <div class="tech-desc" style="margin-top: 30px; line-height: 2.0; font-size: 1.1rem;">
                                 <p>本系统基于<a href="https://github.com/CGCL-codes/Flash" target="_blank">Flash</a>工具进行Java项目的Gadget Chain检测。Flash首先进行可控性分析，以确定变量是否可以通过反序列化来恢复。然后，它应用一种混合分派方法，根据接收变量的可控性在调用点解析被调用者：如果可控，Flash使用更全面但可能精度较低的技术（例如类层次分析法、代理分派）；否则，则应用更精确的技术（例如指针分析）。Flash还通过处理涉及可控变量的反射来恢复缺失的调用边，并过滤掉不相关的边，以提高准确率和效率</p>
-                                <img src="assets/images/java-workflow.jpg" alt="Flash流程图" style="max-width:100%; height:auto; margin-top:10px;">
+                                <img src="assets/images/java-workflow.png" alt="Flash流程图" style="max-width: 100%; height: auto; margin: 30px 0; border: 1px solid #eee; padding: 15px; background-color: #fff;">
                             </div>
                         </div>
                     </div>
@@ -266,8 +266,8 @@
                 <div class="slider-wrapper">
                     <div class="slider-item active">
                         <div class="row align-items-stretch">
-                            <!-- 左侧文字区域 -->
-                            <div class="col-lg-6 slider-text">
+                            <!-- 左侧文字区域（3列） -->
+                            <div class="col-lg-4 slider-text">
                                 <div class="text-content">
                                     <h3 class="section-title">PHP Gadget Chain检测</h3>
                                     <p class="section-desc">
@@ -279,20 +279,20 @@
                                 </div>
                             </div>
                             
-                            <!-- 右侧动态表格区域 -->
-                            <div class="col-lg-6 dynamic-table-container"
-                                 data-json-file="{{ url_for('static', filename='table/php_result.json') }}"
-                                 data-table-type="php">
+                            <!-- 右侧动态表格区域（7列） -->
+                            <div class="col-lg-8 dynamic-table-container"
+                                data-json-file="{{ url_for('static', filename='table/php_result.json') }}"
+                                data-table-type="php">
                                 <!-- 表格将在这里动态生成 -->
                             </div>
                         </div>
                     </div>
                     
                     <!-- 滑块效果展示 -->
-                     <div class="slider-item">
+                    <div class="slider-item">
                         <div class="row align-items-stretch">
-                            <!-- 左侧文字区域 -->
-                            <div class="col-lg-6 slider-text">
+                            <!-- 左侧文字区域（3列） -->
+                            <div class="col-lg-4 slider-text">
                                 <div class="text-content">
                                     <h3 class="section-title">Java Gadget Chain检测</h3>
                                     <p class="section-desc">
@@ -304,10 +304,10 @@
                                 </div>
                             </div>
                             
-                            <!-- 右侧动态表格区域 -->
-                            <div class="col-lg-6 dynamic-table-container"
-                                 data-json-file="{{ url_for('static', filename='table/java_result.json') }}"
-                                 data-table-type="java">
+                            <!-- 右侧动态表格区域（7列） -->
+                            <div class="col-lg-8 dynamic-table-container"
+                                data-json-file="{{ url_for('static', filename='table/java_result.json') }}"
+                                data-table-type="java">
                                 <!-- 表格将在这里动态生成 -->
                             </div>
                         </div>
