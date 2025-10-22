@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}关于我们 - CGCL实验室{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+    .section {
+        padding: 4rem 0;
+    }
+    
+    .section-title {
+        color: #0A4DA2;
+        margin-bottom: 2rem;
+    }
+    
+    .lab-card {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 2.5rem;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    
+    .lab-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .lab-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .lab-name {
+        color: #0A4DA2;
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-container {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background-color: #F5F8FF;
+        border-radius: 8px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 0.8rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0A4DA2;
+        margin-bottom: 0.3rem;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #555;
+    }
+    
+    .member-card {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 10px;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .member-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .member-photo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 1.5rem;
+        border: 4px solid #F5F8FF;
+    }
+    
+    .member-name {
+        font-weight: bold;
+        color: #0A4DA2;
+        margin-bottom: 0.5rem;
+    }
+    
+    .member-role {
+        color: #0A66C2;
+        font-style: italic;
+        margin-bottom: 1rem;
+    }
+    
+    .member-bio {
+        font-size: 0.95rem;
+        color: #666;
+    }
+    
+    /* LOGO容器优化 */
+    .logos-wrapper {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .logos-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        width: 100%;
+    }
+    
+    .logo-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        min-height: 120px;
+    }
+    
+    .logo-img {
+        max-width: 100%;
+        max-height: 100px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- 实验室介绍 -->
+    <section class="section bg-gray-50">
+        <div class="container">
+            <div class="row justify-content-center mb-8">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title fw-bold display-5">实验室介绍</h2>
+                </div>
+            </div>
+            
+            <div class="row align-items-stretch">
+                <div class="col-lg-6 mb-6 mb-lg-0">
+                    <div class="lab-card">
+                        <div class="lab-header">
+                            <h3 class="lab-name">集群与网格计算湖北省重点实验室（CGCL）</h3>
+                        </div>
+                        
+                        <p class="mb-4 text-gray-700">
+                            华中科技大学“服务计算技术与系统教育部重点实验室”暨“集群与网格计算湖北省重点实验室”依托于计算机系统结构国家重点学科和计算机软件与理论湖北省重点学科，拥有自由开放的学术氛围和国际前沿的研究方向。目前研究领域主要包括：系统软件与体系结构、分布式系统、网络空间安全、大数据等。
+                        </p>
+                        <p class="mb-4 text-gray-700">
+                            实验室具备实力雄厚的师资力量、充满活力的科研梯队以及良好的硬件设施环境。现有教授20人，副教授17人，副研究员2人，具有博士学位者48人。实验室出版专著和教材29本，发表国内外学术期刊及国际学术会议论文1400余篇，获得美国发明专利56项、国家发明专利441项
+                        </p>
+                        <p class="text-gray-700">
+                            GCSCAN反序列化漏洞检测平台是实验室的重要研究成果之一，旨在为企业和开发者提供高效、准确的反序列化漏洞检测解决方案，提升软件系统的安全性。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="logos-wrapper">
+                        <div class="logos-grid">
+                            <!-- LOGO 1 -->
+                            <div class="logo-item">
+                                <img src="{{ url_for('static', filename='images/hust.jpg') }}" alt="实验室LOGO1" class="logo-img">
+                            </div>
+                            
+                            <!-- LOGO 2 -->
+                            <div class="logo-item">
+                                <img src="{{ url_for('static', filename='images/bdts.jpg') }}" alt="实验室LOGO2" class="logo-img">
+                            </div>
+                            
+                            <!-- LOGO 3 -->
+                            <div class="logo-item">
+                                <img src="{{ url_for('static', filename='images/scts.jpg') }}" alt="实验室LOGO3" class="logo-img">
+                            </div>
+                            
+                            <!-- LOGO 4 -->
+                            <div class="logo-item">
+                                <img src="{{ url_for('static', filename='images/cgcl.jpg') }}" alt="实验室LOGO4" class="logo-img">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 人员介绍 -->
+    <section class="section">
+        <div class="container">
+            <div class="row justify-content-center mb-8">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title fw-bold display-5">研究团队</h2>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- 团队成员1 -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="member-card">
+                        <img src="{{ url_for('static', filename='images/member1.jpg') }}" alt="教授" class="member-photo">
+                        <h4 class="member-name">文明教授</h4>
+                        <p class="member-role">指导老师</p>
+                        <p class="member-bio">
+                            华中科技大学网络空间安全学院副教授、博士生导师，领导ARTS^3研究小组，聚焦系统软件安全前沿研究。主要研究方向包括代码大模型安全、软件测试与分析、程序缺陷漏洞的检测、定位与修复等
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 团队成员2 -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="member-card">
+                        <img src="{{ url_for('static', filename='images/member2.jpg') }}" alt="副教授" class="member-photo">
+                        <h4 class="member-name">张亿恒</h4>
+                        <p class="member-role">研究生</p>
+                        <p class="member-bio">
+                            华中科技大学网络空间安全学院研究生，主要研究方向为漏洞检测，静态分析，曾在Usenix，S&P上发表反序列化漏洞相关论文，并积极承担企业学校创新项目，GCSCAN检测平台项目负责人之一。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 团队成员3 -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="member-card">
+                        <img src="{{ url_for('static', filename='images/member3.jpg') }}" alt="副教授" class="member-photo">
+                        <h4 class="member-name">唐才智</h4>
+                        <p class="member-role">研究生</p>
+                        <p class="member-bio">
+                            华中科技大学网络空间安全学院研究生，主要研究方向为跨语言程序分析，GCSCAN检测平台项目负责人之一。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 团队成员4 -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="member-card">
+                        <img src="{{ url_for('static', filename='images/member4.jpg') }}" alt="研究员" class="member-photo">
+                        <h4 class="member-name">周诗嘉</h4>
+                        <p class="member-role">本科生</p>
+                        <p class="member-bio">
+                            华中科技大学网络空间安全学院研究生，xxx，GCSCAN检测平台项目负责人之一。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

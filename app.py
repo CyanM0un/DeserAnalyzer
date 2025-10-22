@@ -182,6 +182,10 @@ def _short_from_label_generic(label: str):
     m = re.search(r"([A-Za-z_$][A-Za-z0-9_$<>]*)\s*(?:\(|$)", s)
     return m.group(1) if m else s
 
+@app.route("/about")
+def about():
+    return render_template('about.html')
+
 @app.route('/project')
 def project_view():
     """单项目链路列表页面：展示每条链的 Source / Sink / 长度，并提供 AI 总结与在线审计入口。"""
