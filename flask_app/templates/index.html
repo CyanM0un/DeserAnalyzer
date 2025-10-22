@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/seamless-slider.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tech-intro.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dynamic-table.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -193,9 +194,11 @@
                                 </div>
                             </div>
                             
-                            <!-- 右侧图片区域 -->
-                            <div class="col-lg-6 slider-image">
-                                <img src="{{ url_for('static', filename='images/php-result.jpg') }}" alt="php结果" class="slider-img">
+                            <!-- 右侧动态表格区域 -->
+                            <div class="col-lg-6 dynamic-table-container"
+                                 data-json-file="{{ url_for('static', filename='table/php_result.json') }}"
+                                 data-table-type="php">
+                                <!-- 表格将在这里动态生成 -->
                             </div>
                         </div>
                     </div>
@@ -216,9 +219,11 @@
                                 </div>
                             </div>
                             
-                            <!-- 右侧图片区域 -->
-                            <div class="col-lg-6 slider-image">
-                                <img src="{{ url_for('static', filename='images/java-result.jpg') }}" alt="java结果" class="slider-img">
+                            <!-- 右侧动态表格区域 -->
+                            <div class="col-lg-6 dynamic-table-container"
+                                 data-json-file="{{ url_for('static', filename='table/java_result.json') }}"
+                                 data-table-type="java">
+                                <!-- 表格将在这里动态生成 -->
                             </div>
                         </div>
                     </div> 
@@ -289,4 +294,5 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/seamless-slider.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tech-intro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dynamic-table.js') }}"></script>
 {% endblock %}
