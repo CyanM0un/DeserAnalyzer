@@ -20,13 +20,13 @@
                 <div class="col-lg-6 d-flex align-items-center">
                     <div class="text-center text-lg-start">
                         <h2 class="display-4 fw-bold mb-4" style="color: var(--primary-blue);">
-                            Gadget Chain - Detect, Defend:
+                            Gadget Chain - 检测与防护:
                         </h2>
                         <p class="lead fs-5" style="color: var(--text-dark);">
-                            Mitigate Deserialization Risks.
+                            抵御反序列化漏洞风险
                         </p>
                         <a href="{{ url_for('analyze') }}" class="btn btn-lg mt-3" style="width: 200px; background-color: var(--primary-blue); color: white;">
-                            Get Started
+                            开始使用
                         </a>
                     </div>
                 </div>
@@ -34,49 +34,135 @@
         </div>
     </section>
 
-    <!-- 主要功能 -->
-    <section class="section">
+    <section class="section" style="background-color: #f8f9fa; padding: 60px 0;">
         <div class="container">
             <div class="row justify-content-center mb-5">
                 <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold">Core Functions</h2>
+                    <h2 class="section-title fw-bold">抵御反序列化漏洞风险</h2>
                 </div>
             </div>
-            <div class="row g-1 justify-content-center">
-                <!-- 扫描功能 -->
-                <div class="col-lg-2 col-md-6 text-start">
-                    <div class="feature-icon mb-2">
-                        <i class="fas fa-search"></i>
+            
+            <div class="row g-5">
+                <!-- 漏洞危害 -->
+                <div class="col-lg-6">
+                    <div class="bg-white p-5 rounded shadow h-100">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="feature-icon me-4" style="color: #dc3545;">
+                                <i class="fas fa-exclamation-triangle fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0" style="font-size: 1.8rem; letter-spacing: 0.5px; color: #2d3436; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                反序列化漏洞危害严重
+                            </h3>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-start">
+                                <i class="fas fa-check-circle text-danger mt-1 me-3"></i>
+                                <div>
+                                    <strong>后果严重</strong>
+                                    <p class="mb-0 text-muted">攻击者可通过精心构造的恶意数据，造成多种攻击，如命令执行、文件操作、权限提升等</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-start">
+                                <i class="fas fa-check-circle text-danger mt-1 me-3"></i>
+                                <div>
+                                    <strong>影响广泛</strong>
+                                    <p class="mb-0 text-muted">反序列化漏洞属于2024 CWE Top 10之一，占到Java应用检测漏洞的30%</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-start">
+                                <i class="fas fa-check-circle text-danger mt-1 me-3"></i>
+                                <div>
+                                    <strong>隐蔽性高</strong>
+                                    <p class="mb-0 text-muted">漏洞利用链拥有多种组合方式，十分灵活隐蔽</p>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
-                    <h5 class="fw-bold mb-2">漏洞扫描</h5>
-                    <p class="small text-muted">全面检测反序列化漏洞利用链</p>
+                </div>
+                
+                <!-- 平台意义 -->
+                <div class="col-lg-6">
+                    <div class="bg-white p-5 rounded shadow h-100">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="feature-icon me-4" style="color: #28a745;">
+                                <i class="fas fa-shield-alt fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0" style="font-size: 1.8rem; letter-spacing: 0.5px; color: #2d3436; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                本平台的核心价值
+                            </h3>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-start">
+                                <i class="fas fa-check-circle text-success mt-1 me-3"></i>
+                                <div>
+                                    <strong>更全面的静态分析检测</strong>
+                                    <p class="mb-0 text-muted">在漏洞被利用前检测出应用潜在的漏洞利用链，防患于未然</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-start">
+                                <i class="fas fa-check-circle text-success mt-1 me-3"></i>
+                                <div>
+                                    <strong>多语言跨适配能力</strong>
+                                    <p class="mb-0 text-muted">本平台支持PHP，Java项目的检测，未来预计支持更多的语言框架</p>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-start">
+                                <i class="fas fa-check-circle text-success mt-1 me-3"></i>
+                                <div>
+                                    <strong>可视化漏洞链溯源分析</strong>
+                                    <p class="mb-0 text-muted">直观展示漏洞调用路径与风险节点，并且使用AI模型辅助漏洞决策</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 主要功能 -->
+    <section class="section py-10">
+        <div class="container">
+            <div class="row justify-content-center mb-10">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title fw-bold" style="font-size: 2.2rem;">核心功能</h2>
+                </div>
+            </div>
+            <div class="row g-8 justify-content-center">
+                <!-- 扫描功能 -->
+                <div class="col-lg-2 col-md-5 text-center">
+                    <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-search fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">漏洞链检测</h5>
+                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">更精确的静态分析助力全面检测反序列化漏洞链</p>
                 </div>
                 
                 <!-- 链接分析 -->
-                <div class="col-lg-2 col-md-6 text-start">
-                    <div class="feature-icon mb-2">
-                        <i class="fas fa-link"></i>
+                <div class="col-lg-2 col-md-5 text-center">
+                    <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-link fa-2x text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-2">利用链分析</h5>
-                    <p class="small text-muted">深度分析攻击利用链</p>
+                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">利用链分析</h5>
+                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">在线审计+AI辅助深度分析漏洞利用链</p>
                 </div>
                 
                 <!-- 实时监控 -->
-                <div class="col-lg-2 col-md-6 text-start">
-                    <div class="feature-icon mb-2">
-                        <i class="fas fa-eye"></i>
+                <div class="col-lg-2 col-md-5 text-center">
+                    <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-eye fa-2x text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-2">实时监控</h5>
-                    <p class="small text-muted">持续监控安全状态</p>
+                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">实时监控</h5>
+                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">全时段漏洞分析与安全状态监控</p>
                 </div>
                 
                 <!-- 报告生成 -->
-                <div class="col-lg-2 col-md-6 text-start">
-                    <div class="feature-icon mb-2">
-                        <i class="fas fa-file-alt"></i>
+                <div class="col-lg-2 col-md-5 text-center">
+                    <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-file-alt fa-2x text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-2">宏观统计</h5>
-                    <p class="small text-muted">获得宏观统计结果</p>
+                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">宏观统计</h5>
+                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">多维度可视化报表呈现漏洞趋势宏观统计</p>
                 </div>
             </div>
         </div>
@@ -87,7 +173,7 @@
         <div class="container">
             <div class="row justify-content-center mb-5">
                 <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold">Technical Overview</h2>
+                    <h2 class="section-title fw-bold">技术概要</h2>
                 </div>
                 
                 <!-- 技术介绍模块 -->
@@ -160,7 +246,7 @@
                 <div class="col-lg-3 col-md-4 text-center">
                     <div class="lang-card">
                         <i class="fas fa-ellipsis-h fa-3x mb-3" style="color: #5F9EA0;"></i>
-                        <h4>More to be Supported</h4>
+                        <h4>正在开发</h4>
                     </div>
                 </div>
             </div>
@@ -172,7 +258,7 @@
         <div class="container">
             <div class="row justify-content-center mb-5">
                 <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold">Performance</h2>
+                    <h2 class="section-title fw-bold">成果展示</h2>
                 </div>
             </div>
             <!-- 滑块-->
