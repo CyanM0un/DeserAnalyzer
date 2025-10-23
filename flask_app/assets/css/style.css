@@ -15,6 +15,48 @@ body {
     line-height: 1.6;
 }
 
+/* ---------- 顶部导航滑动指示器 ---------- */
+.nav-links {
+    position: relative;
+}
+.nav-links .nav-indicator {
+    position: absolute;
+    left: 0;
+    top: 0; /* 实际位置由 JS 计算为文字正下方 */
+    height: 2px;
+    width: 0;
+    background: #0F766E; /* 与主题色一致 */
+    border-radius: 2px;
+    transition: left 300ms ease, width 300ms ease;
+    pointer-events: none;
+    margin-left: 0 !important; /* 重置 space-x-8 添加的间距，避免偏移 */
+}
+.nav-links .nav-link {
+    position: relative;
+    transition: color 200ms ease;
+}
+.nav-links .nav-label { display: inline-block; }
+
+/* ---------- 页面切换淡入淡出 ---------- */
+#page-content {
+    opacity: 0;
+    transform: translateY(4px);
+}
+#page-content.page-enter {
+    opacity: 0;
+    transform: translateY(6px);
+}
+#page-content.page-enter.page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+#page-content.page-leave {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+
 
 .section {
     position: relative;
