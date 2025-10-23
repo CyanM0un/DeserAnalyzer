@@ -67,10 +67,10 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- 第三方库（CDN） -->
-<script src="https://unpkg.com/vis-network@9.1.6/dist/vis-network.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/vis-network@9.1.6/dist/vis-network.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- 第三方库（本地） -->
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/vis-network/vis-network.min.css') }}" />
+<script src="{{ url_for('static', filename='vendor/vis-network/vis-network.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/chart-js/chart.umd.min.js') }}"></script>
 
 <!-- 后端注入的数据 -->
 <script id="projects-json" type="application/json">{% if projects is defined %}{{ projects | tojson | safe }}{% endif %}</script>
