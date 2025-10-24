@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderGraph(project, chainIdx = 0) {
     const container = document.getElementById('graph');
+    const sk = document.getElementById('graph-skeleton');
 
     if (!project || !project.chains || project.chains.length === 0) {
       graphTitleEl.textContent = '（无数据）';
@@ -207,7 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     graphTitleEl.textContent = `${project.name}`;
 
-    const useAll = (chainIdx === 'all');
+  const useAll = (chainIdx === 'all');
+  // 大图合并时显示骨架屏，提升感知速度
+  if (sk) sk.classList.toggle('hidden', !useAll);
     let nodes, edges;
 
     if (useAll) {
@@ -260,6 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     container.innerHTML = '';
     createNetwork(container, { nodes, edges });
+    if (useAll && network) {
+      const hideSk = () => { if (sk) sk.classList.add('hidden'); network.off('stabilizationIterationsDone', hideSk); };
+      network.once('stabilizationIterationsDone', hideSk);
+      // 最坏兜底：2s 后仍未触发则手动隐藏
+      setTimeout(() => { if (sk) sk.classList.add('hidden'); }, 2000);
+    }
   }
 
   // 图表统计
@@ -336,10 +345,17 @@ document.addEventListener('DOMContentLoaded', () => {
       opt.title = ch.name ? `入口: ${ch.entry}` : label;
       chainSelect.appendChild(opt);
     });
-    // 重建自定义菜单
-    if (chainTrigger) chainTrigger.textContent = '全部链路';
+    // 默认只渲染第 1 条链，提升首屏速度
+    if ((p.chains || []).length > 0) {
+      chainSelect.value = '0';
+      const firstOpt = Array.from(chainSelect.options).find(o => o.value === '0');
+      if (chainTrigger && firstOpt) chainTrigger.textContent = firstOpt.textContent;
+    } else {
+      if (chainTrigger) chainTrigger.textContent = '全部链路';
+    }
+    // 重建自定义菜单（会根据当前 selected 高亮）
     rebuildMenuFromSelect();
-    renderGraph(p, 'all');
+    renderGraph(p, (p.chains && p.chains.length) ? 0 : 'all');
     updateCharts();
   }
 

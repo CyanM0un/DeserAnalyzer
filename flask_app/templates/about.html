@@ -70,6 +70,8 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         margin-bottom: 2rem;
         transition: all 0.3s ease;
+        height: 100%;                 /* 让卡片撑满列的可用高度 */
+        display: flex; flex-direction: column;  /* 便于内部内容分布 */
     }
     
     .member-card:hover {
@@ -101,7 +103,19 @@
     .member-bio {
         font-size: 0.95rem;
         color: #666;
+        margin-top: .5rem;
     }
+    /* 让每列等高：列作为弹性子项被拉伸，卡片高度100%即可保持统一高度 */
+    .row.g-4.align-items-stretch > [class^="col-"],
+    .row.g-4.align-items-stretch > [class*=" col-"] {
+        display: flex;
+    }
+    .row.g-4.align-items-stretch > [class^="col-"] > .member-card,
+    .row.g-4.align-items-stretch > [class*=" col-"] > .member-card {
+        width: 100%;
+    }
+    /* 如果需要限制简介行数，取消下一段注释（示例限制为 4 行）*/
+    /* .member-bio { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; } */
     
     /* LOGO容器优化 */
     .logos-wrapper {
@@ -209,7 +223,7 @@
                 </div>
             </div>
             
-            <div class="row g-4">
+            <div class="row g-4 align-items-stretch">
                 <!-- 团队成员1 -->
                 <div class="col-lg-3 col-md-6">
                     <div class="member-card">
@@ -253,7 +267,7 @@
                         <h4 class="member-name">周诗嘉</h4>
                         <p class="member-role">本科生</p>
                         <p class="member-bio">
-                            华中科技大学网络空间安全学院研究生，xxx，GCSCAN检测平台项目负责人之一。
+                            华中科技大学网络空间安全学院本科生，GCSCAN检测平台项目负责人之一。
                         </p>
                     </div>
                 </div>

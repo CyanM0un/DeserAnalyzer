@@ -29,3 +29,15 @@
   border-radius: 0.5rem; padding: 6px 8px; font-size: 12px;
   box-shadow: 0 10px 25px -5px rgba(15,118,110,0.10), 0 8px 10px -6px rgba(15,118,110,0.06);
 }
+
+/* 大图渲染时的骨架屏 */
+#graph-skeleton { background: transparent; }
+.skeleton-shimmer {
+  --c1: rgba(148,163,184,.15);
+  --c2: rgba(148,163,184,.30);
+  background: linear-gradient(90deg, var(--c1) 25%, var(--c2) 37%, var(--c1) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: .5rem;
+}
+@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }

@@ -1,0 +1,47 @@
+/* Online audit page - light theme polish */
+:root {
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --text-main: #0f172a;        /* slate-900 */
+  --text-subtle: #64748b;      /* slate-500 */
+  --accent-1: #0ea5e9;         /* sky-500 */
+  --accent-2: #0F766E;         /* teal-700 (brand) */
+}
+
+.audit-page .page-actions a { text-decoration: none; }
+
+/* Step cards */
+.step-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; box-shadow: 0 6px 24px rgba(15,23,42,.06); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.step-card:hover { transform: translateY(-1px); box-shadow: 0 10px 25px rgba(15,23,42,.08); border-color: #d1d5db; }
+
+/* Header: title + meta on right */
+.audit-head { display: grid; grid-template-columns: 1fr auto; gap: .25rem 1rem; align-items: start; }
+@media (max-width: 768px) { .audit-head { grid-template-columns: 1fr; } .audit-meta { justify-self: start; text-align: left; } }
+.audit-title { margin: 0; font-size: 1rem; font-weight: 700; color: var(--accent-2); line-height: 1.25; word-break: break-all; }
+.audit-meta { font-size: .875rem; color: var(--text-subtle); }
+.audit-meta code { color: var(--text-main); }
+
+/* Code box */
+.code-box { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: .75rem; }
+.code-box code { display:block; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: .875rem; line-height: 1.6; }
+.code-ln { color: #94a3b8; display:inline-block; min-width: 3ch; text-align: right; }
+.code-line { white-space: pre; }
+
+/* Meta row under page title */
+.meta-label { color: var(--accent-2); font-weight: 600; }
+.meta-value { color: var(--text-main); }
+.meta-sep { color: #94a3b8; padding: 0 .25rem; }
+
+/* Small pill badge for step index (optional if used later) */
+.badge { display:inline-flex; align-items:center; gap:.35rem; padding:.1rem .5rem; border-radius:9999px; background: rgba(20,184,166,.12); color:#0d9488; font-size:.75rem; font-weight:700; }
+
+/* Persistent ASK AI button */
+.fixed-btn-container { position: fixed !important; z-index: 2000; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); }
+.floating-btn { background: #008080; color: #fff; border: none; border-radius: 9999px; padding: 12px 24px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(0, 128, 128, 0.25); transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease; display: inline-flex; align-items: center; }
+.floating-btn:hover { background: #006c6c; transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0, 128, 128, 0.32); }
+.floating-btn:active { transform: translateY(0); }
+
+@media (max-width: 768px) {
+  .fixed-btn-container { right: max(15px, env(safe-area-inset-right)); bottom: max(15px, env(safe-area-inset-bottom)); }
+  .floating-btn { padding: 10px 20px; font-size: 13px; }
+}
