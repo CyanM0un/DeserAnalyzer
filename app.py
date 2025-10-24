@@ -946,6 +946,72 @@ def api_ai_health():
         'AI_API_KEY_configured': bool(os.environ.get('AI_API_KEY'))
     })
 
+# === AI 总结接口：对单条链生成结构化摘要 ===
+@app.route('/api/ai/summary', methods=['POST'])
+def api_ai_summary():
+    try:
+        payload = request.get_json(silent=True) or {}
+        file_hash = payload.get('hash') or request.args.get('hash')
+        idx = int(payload.get('idx') or request.args.get('idx') or 0)
+        if not file_hash:
+            return jsonify({'error': 'missing hash'}), 400
+
+        meta, steps = _build_audit_context_for_ai(file_hash, idx)
+        ctx = _format_ai_context_text(meta, steps)
+
+        base_url = os.environ.get('AI_BASE_URL', 'https://api.siliconflow.cn/v1')
+        api_key = os.environ.get('AI_API_KEY', '')
+        model = os.environ.get('AI_MODEL', 'deepseek-ai/DeepSeek-V3.2-Exp')
+        if not api_key:
+            return jsonify({
+                'error': 'AI 服务未配置',
+                'detail': '服务器未设置 AI_API_KEY 环境变量，请在后端设置后重启服务。'
+            }), 503
+
+        system = (
+            '你是资深安全研究员，擅长分析反序列化/POP 链。\n'
+            '基于提供的上下文，产出结构化 JSON 摘要，字段：\n'
+            '{"summary": string, "risk_level": "low|medium|high|critical", "confidence": 0-100, '
+            ' "evidence": [string...], "recommendations": [string...]}。\n'
+            '要求：\n- 简明扼要，避免赘述；\n- evidence 给出来自上下文的依据（方法名、关键调用、代码迹象）；\n- recommendations 给出具体修复建议；\n- 仅输出 JSON，不要任何额外文字。\n'
+        )
+        user = '请对当前链进行安全摘要：\n' + ctx
+        messages = [ {'role':'system','content':system}, {'role':'user','content':user} ]
+        raw = _call_openai_compatible(base_url, api_key, model, messages, temperature=0.2, max_tokens=900)
+
+        # 解析 JSON（兼容模型可能包裹markdown代码块）
+        text = raw.strip()
+        if '```' in text:
+            try:
+                text = text.split('```', 2)[1]
+                if text.lower().startswith('json'):
+                    text = text[4:]
+            except Exception:
+                text = raw
+        try:
+            obj = json.loads(text)
+        except Exception:
+            # 尝试剪出第一个大括号块
+            try:
+                i = raw.find('{'); j = raw.rfind('}')
+                obj = json.loads(raw[i:j+1]) if i != -1 and j != -1 else {'summary': raw}
+            except Exception:
+                obj = {'summary': raw}
+        # 兜底字段
+        obj.setdefault('risk_level','medium')
+        obj.setdefault('confidence', 60)
+        obj.setdefault('evidence', [])
+        obj.setdefault('recommendations', [])
+        return jsonify({'meta': meta, 'result': obj})
+    except requests.HTTPError as e:
+        try:
+            err_json = e.response.json()
+        except Exception:
+            err_json = None
+        return jsonify({'error': f'AI HTTP {e.response.status_code}', 'detail': err_json}), 502
+    except Exception as e:
+        return jsonify({'error':'server error','detail':str(e)}), 500
+
 @app.route("/analyze", methods=["GET", "POST"])
 def analyze():
    if request.method == "POST":

@@ -22,6 +22,19 @@
   .ai-input{ display:flex; gap:.5rem; padding:.75rem; border-top:1px solid #e2e8f0; }
   .ai-input textarea{ flex:1; resize:none; min-height:40px; max-height:120px; padding:.5rem; border:1px solid #d1d5db; border-radius:8px; background:#fff; color:#0f172a; }
   .ai-input button{ background:#14b8a6; color:#fff; padding:.5rem .9rem; border-radius:.5rem; }
+
+  /* AI 总结弹窗（更简洁的卡片风格） */
+  .sum-modal{ width:min(800px, 92vw); max-height:72vh; background:#fff; color:#0f172a; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 20px 60px rgba(2,6,23,.2); display:flex; flex-direction:column; overflow:hidden; }
+  .sum-body{ padding:1rem; overflow:auto; }
+  .sum-grid{ display:grid; grid-template-columns: 1fr; gap:.75rem; }
+  @media (min-width:768px){ .sum-grid{ grid-template-columns: 1fr 1fr; } }
+  .sum-card{ border:1px solid #e5e7eb; border-radius:10px; padding:.75rem; background:linear-gradient(180deg,#f8fafc, #ffffff); }
+  .sum-h{ font-weight:700; color:#0F766E; margin-bottom:.25rem; }
+  .sum-b ul{ padding-left:1rem; margin:0; } .sum-b li{ list-style:disc; margin:.2rem 0; }
+  .sum-b .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size:.85em; background:#f1f5f9; padding:.15rem .35rem; border-radius:6px; }
+  .sum-kv{ display:grid; grid-template-columns: 64px 1fr; gap:.25rem .5rem; align-items:start; }
+  .sum-k{ color:#0F766E; font-weight:700; }
+  .sum-v{ color:#0f172a; word-break:break-all; overflow-wrap:anywhere; }
 </style>
 {% endblock %}
 
@@ -70,7 +83,7 @@
         <div class="hr"></div>
         <div class="card-actions">
           <a class="btn btn-secondary" href="{{ url_for('audit', hash=meta.file_hash, idx=c.index, lang=meta.language) }}"><i class="fa fa-search"></i> 在线审计</a>
-          <button class="btn btn-primary" data-ai-idx="{{ c.index }}"><i class="fa fa-robot"></i> AI 审计</button>
+          <button class="btn btn-primary" data-ai-sum-idx="{{ c.index }}"><i class="fa fa-robot"></i> AI 总结</button>
         </div>
       </article>
       {% endfor %}
@@ -79,11 +92,11 @@
     {% endif %}
     </section>
 
-  <!-- AI 对话弹窗（居中半屏） -->
+  <!-- AI 对话弹窗（居中半屏）-- 保留原聊天功能，按需使用 -->
   <div id="ai-overlay" class="ai-overlay">
     <div class="ai-modal">
       <div class="ai-head">
-        <div class="ai-title"><i class="fa fa-robot mr-1"></i>AI 审计</div>
+        <div class="ai-title"><i class="fa fa-robot mr-1"></i>AI 对话</div>
         <span id="ai-close" class="ai-close"><i class="fa fa-close"></i></span>
       </div>
       <div id="ai-msgs" class="ai-msgs"></div>
@@ -93,12 +106,26 @@
       </div>
     </div>
   </div>
+
+  <!-- AI 总结弹窗 -->
+  <div id="sum-overlay" class="ai-overlay">
+    <div class="sum-modal">
+      <div class="ai-head">
+        <div class="ai-title"><i class="fa fa-robot mr-1"></i>AI 总结</div>
+        <span id="sum-close" class="ai-close"><i class="fa fa-close"></i></span>
+      </div>
+      <div id="sum-body" class="sum-body">
+        <div style="color:#64748b;">分析中<span class="dots"></span></div>
+      </div>
+    </div>
+  </div>
 </main>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  const BACKEND_AI_ENDPOINT = "/api/ai/audit";
+  const BACKEND_AI_ENDPOINT = "/api/ai/audit"; // 聊天（保留）
+  const SUMMARY_ENDPOINT = "/api/ai/summary";  // 新的 AI 总结
   let currentIdx = 0;
   const overlay = document.getElementById('ai-overlay');
   const msgs = document.getElementById('ai-msgs');
@@ -106,6 +133,18 @@
   const sendBtn = document.getElementById('ai-send');
   document.getElementById('ai-close').addEventListener('click', ()=> overlay.classList.remove('show'));
   overlay.addEventListener('click', (e)=>{ if(e.target.id==='ai-overlay') overlay.classList.remove('show'); });
+
+  // 总结弹窗绑定
+  const sumOverlay = document.getElementById('sum-overlay');
+  const sumBody = document.getElementById('sum-body');
+  document.getElementById('sum-close').addEventListener('click', ()=> sumOverlay.classList.remove('show'));
+  sumOverlay.addEventListener('click', (e)=>{ if(e.target.id==='sum-overlay') sumOverlay.classList.remove('show'); });
+  // 确保总结弹窗挂载在 <body>，避免受父级 transform 影响
+  try {
+    if (sumOverlay && sumOverlay.parentElement !== document.body) {
+      document.body.appendChild(sumOverlay);
+    }
+  } catch (_) {}
 
   // 确保对话框挂载在 <body>，避免受父级 transform 影响导致“居中在页面而非视口”
   try {
@@ -151,6 +190,58 @@
   }
   sendBtn.addEventListener('click', send);
   ta.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+  // 旧聊天入口（如需保留）
   document.querySelectorAll('button[data-ai-idx]').forEach(btn=> btn.addEventListener('click', ()=> openChat(parseInt(btn.dataset.aiIdx,10)||0)) );
+
+  // 新的“AI 总结”入口
+  document.querySelectorAll('button[data-ai-sum-idx]').forEach(btn=> btn.addEventListener('click', async ()=>{
+    const idx = parseInt(btn.dataset.aiSumIdx,10)||0;
+    sumBody.innerHTML = '<div style="color:#64748b;">分析中<span class="dots"></span></div>';
+    sumOverlay.classList.add('show');
+    try{
+      const resp = await fetch(SUMMARY_ENDPOINT, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ hash: '{{ meta.file_hash }}', idx }) });
+      const data = await resp.json();
+      if(!resp.ok){ sumBody.innerHTML = '<div style="color:#ef4444">请求失败：'+(data.error||'未知错误')+'</div>'; return; }
+      const r = data.result || {};
+      const m = data.meta || {};
+      const esc = (x)=>String(x==null? '': x).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+      const lvlMap = { low:'低', medium:'中', high:'高', critical:'严重' };
+      const lvl = lvlMap[(r.risk_level||'medium')] || '中';
+      const conf = (typeof r.confidence==='number')? r.confidence : 60;
+      const evs = Array.isArray(r.evidence)? r.evidence : [];
+      const recs = Array.isArray(r.recommendations)? r.recommendations : [];
+      sumBody.innerHTML = `
+        <div class="sum-grid">
+          <div class="sum-card" style="grid-column:1/-1;">
+            <div class="sum-h">分析对象</div>
+            <div class="sum-kv">
+              <div class="sum-k">链路</div><div class="sum-v">第 <span class="mono">${m.chain_index||idx+1}</span> 条 · 长度 <span class="mono">${m.length||'-'}</span></div>
+              <div class="sum-k">Source</div><div class="sum-v"><span class="mono">${esc(m.entry)}</span></div>
+              <div class="sum-k">Sink</div><div class="sum-v"><span class="mono">${esc(m.sink)}</span></div>
+            </div>
+          </div>
+          <div class="sum-card" style="grid-column:1/-1;">
+            <div class="sum-h">结论</div>
+            <div class="sum-b">${(r.summary||'（无摘要）').replace(/\n/g,'<br>')}</div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-h">风险等级</div>
+            <div class="sum-b"><span class="mono">${lvl}</span></div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-h">可信度</div>
+            <div class="sum-b"><span class="mono">${conf}%</span></div>
+          </div>
+          <div class="sum-card" style="grid-column:1/-1;">
+            <div class="sum-h">证据要点</div>
+            <div class="sum-b">${evs.length?('<ul>'+evs.map(x=>`<li>${x}</li>`).join('')+'</ul>'):'—'}</div>
+          </div>
+          <div class="sum-card" style="grid-column:1/-1;">
+            <div class="sum-h">修复建议</div>
+            <div class="sum-b">${recs.length?('<ul>'+recs.map(x=>`<li>${x}</li>`).join('')+'</ul>'):'—'}</div>
+          </div>
+        </div>`;
+    }catch(err){ sumBody.innerHTML = '<div style="color:#ef4444">请求异常：'+err+'</div>'; }
+  }));
 </script>
 {% endblock %}
