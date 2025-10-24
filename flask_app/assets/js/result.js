@@ -276,6 +276,69 @@ document.addEventListener('DOMContentLoaded', () => {
   const pieCtx = document.getElementById('pieChart');
   const barCtx = document.getElementById('barChart');
 
+  // 保障画布高度，避免 0 高导致不可见
+  try {
+    if (pieCtx && !pieCtx.height) pieCtx.height = 240;
+    if (barCtx && !barCtx.height) barCtx.height = 240;
+  } catch (_) {}
+
+  // 统一 Chart 外观
+  if (window.Chart) {
+    Chart.defaults.font.family = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"';
+    Chart.defaults.color = '#334155';
+    Chart.defaults.plugins.legend.labels.boxWidth = 10;
+  }
+
+  // 柱状图数值标签
+  const valueLabelPlugin = {
+    id: 'valueLabel',
+    afterDatasetsDraw(chart) {
+      if (chart.config.type !== 'bar') return;
+      const { ctx } = chart;
+      ctx.save();
+      ctx.fillStyle = '#0F172A';
+      ctx.font = '600 12px Inter, system-ui';
+      chart.data.datasets.forEach((dataset, i) => {
+        const meta = chart.getDatasetMeta(i);
+        meta.data.forEach((bar, index) => {
+          const val = dataset.data[index];
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(String(val), bar.x, bar.y - 4);
+        });
+      });
+      ctx.restore();
+    }
+  };
+
+  // 环形图中心文本（Top 语言 + 百分比）
+  const centerTextPlugin = {
+    id: 'centerText',
+    afterDraw(chart, args, opts) {
+      if (!opts || chart.config.type !== 'doughnut') return;
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return;
+      const cx = (chartArea.left + chartArea.right) / 2;
+      const cy = (chartArea.top + chartArea.bottom) / 2;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (opts.title) {
+        ctx.fillStyle = '#0F766E';
+        ctx.font = '600 13px Inter, system-ui';
+        ctx.fillText(String(opts.title), cx, cy - 8);
+      }
+      if (opts.subtitle) {
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '700 16px Inter, system-ui';
+        ctx.fillText(String(opts.subtitle), cx, cy + 12);
+      }
+      ctx.restore();
+    }
+  };
+
+  if (window.Chart) Chart.register(valueLabelPlugin, centerTextPlugin);
+
   function computeStats(ps) {
     const byLang = {};
     let totalChains = 0;
@@ -287,29 +350,68 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateCharts() {
+    if (!window.Chart || !pieCtx || !barCtx) return;
     const stats = computeStats(projects);
     const labels = Object.keys(stats.byLang);
     const data = Object.values(stats.byLang);
-    const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6'];
+    // 项目主色：与站点主题保持一致（#008080 为主，逐步明亮）
+    const colors = ['#008080', '#0fa4a4', '#14b8a6', '#22d3ee', '#8b5cf6', '#f59e0b'];
+
+    // 环形图数据兜底
+    const _labels = labels.length ? labels : ['暂无数据'];
+    const _data = labels.length ? data : [1];
+    const _bg = labels.length ? colors.slice(0, _labels.length) : ['#e5e7eb'];
 
     if (pie) pie.destroy();
+    // 计算中心文本
+  const total = _data.reduce((a, b) => a + b, 0);
     pie = new Chart(pieCtx, {
-      type: 'pie',
-      data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length) }] },
-      options: { plugins: { legend: { position: 'bottom' }, title: { display: true, text: '按语言分布的项目数' } } }
+      type: 'doughnut',
+      data: { labels: _labels, datasets: [{ data: _data, backgroundColor: _bg, borderColor: '#fff', borderWidth: 2, hoverOffset: 8 }] },
+      options: {
+        maintainAspectRatio: false,
+        cutout: '72%',
+        spacing: 2,
+        animation: { animateScale: true, duration: 800, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { position: 'bottom', align: 'center', labels: { usePointStyle: true, padding: 8, boxWidth: 10 } },
+          title: { display: false },
+          // 中心固定文案：项目分布
+          centerText: { title: '项目分布' },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const v = ctx.parsed;
+                const pct = total ? ((v / total) * 100).toFixed(1) : '0.0';
+                return `${ctx.label}: ${v} (${pct}%)`;
+              }
+            }
+          }
+        }
+      },
+      plugins: []
     });
 
     if (bar) bar.destroy();
+    const bctx = barCtx.getContext('2d');
+    const grad = bctx ? bctx.createLinearGradient(0, 0, 0, 220) : null;
+    if (grad) { grad.addColorStop(0, '#008080'); grad.addColorStop(1, '#14b8a6'); }
     bar = new Chart(barCtx, {
       type: 'bar',
       data: {
         labels: ['Gadget 链总数'],
-        datasets: [{ label: 'Gadget Chains', data: [stats.totalChains], backgroundColor: ['#f59e0b'] }]
+        datasets: [{ label: '总链路', data: [stats.totalChains], backgroundColor: grad || '#0ea5e922', borderRadius: 8, borderSkipped: false, maxBarThickness: 48 }]
       },
       options: {
-        plugins: { legend: { display: false }, title: { display: true, text: '总体统计' } },
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-      }
+        maintainAspectRatio: false,
+        animation: { duration: 700, easing: 'easeOutQuart' },
+        plugins: { legend: { display: false }, title: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#334155' } },
+          y: { beginAtZero: true, ticks: { precision: 0, padding: 6, color: '#64748b' }, grid: { color: 'rgba(148,163,184,.22)' } }
+        }
+      },
+      plugins: [valueLabelPlugin]
     });
   }
 

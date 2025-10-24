@@ -1,6 +1,7 @@
 /* 布局与通用样式 */
 .page-wrap { min-height: calc(100vh - 8rem); }
 .panel { background: #fff; border-radius: 0.75rem; }
+.card-shadow { box-shadow: 0 10px 25px -10px rgba(0,128,128,0.20), 0 8px 10px -8px rgba(0,128,128,0.10); }
 .graph-toolbar button { margin-right: .5rem; }
 
 /* 兼容样式替代 Tailwind @apply */
@@ -19,9 +20,13 @@
 /* 图容器与悬浮提示 */
 #graph {
   height: 520px;
-  border: 1px dashed rgba(15,118,110,.25);
+  border: 1px dashed rgba(15,118,110,.20);
   border-radius: .5rem;
   position: relative;
+  /* 细腻网格背景，弱化存在感 */
+  background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: 0 0;
 }
 #graph-tooltip {
   position: absolute; z-index: 50; display: none; pointer-events: none;
@@ -41,3 +46,18 @@
   border-radius: .5rem;
 }
 @keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
+
+/* 图表卡片美化 */
+.chart-card {
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: .75rem;
+  padding: .75rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 16px -6px rgba(0,128,128,0.14);
+}
+.chart-card__header { display:flex; align-items:center; justify-content:space-between; padding: .25rem .25rem .25rem; }
+.chart-title { font-size: .92rem; font-weight: 600; color: var(--primary-blue, #008080); }
+.chart-card__body { position: relative; height: 240px; }
+.chart-card canvas { position:absolute; inset:0; width:100% !important; height:100% !important; }
