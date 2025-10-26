@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GCSCAN - 反序列化漏洞检测平台{% endblock %}</title>
+    <!-- 站点图标（favicon）：显式声明，避免浏览器默认请求 /favicon.ico 404 -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+    <!-- 可选：如需兼容不支持 SVG 的旧浏览器，请同时提供 PNG/ICO -->
+    <!-- <link rel="alternate icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}"> -->
     <!-- 本地第三方库（请按 README 或下方说明下载到 /flask_app/assets/vendor 下） -->
     <script src="{{ url_for('static', filename='vendor/tailwind/tailwindcss.min.js') }}"></script>
     <link href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">

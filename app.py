@@ -1,7 +1,7 @@
 from gevent import monkey
 monkey.patch_all()
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from utils import *
 from database import *
@@ -105,6 +105,15 @@ def get_gc_php(gc_file, proj_root: str, file_hash: str):
         gcs.append(gc)
 
     return gcs
+
+# 显式提供 /favicon.ico，避免浏览器默认请求 404（Docker/Nginx 环境尤甚）
+@app.route('/favicon.ico')
+def favicon():
+    img_dir = os.path.join(app.static_folder, 'images')
+    try:
+        return send_from_directory(img_dir, 'favicon.svg', mimetype='image/svg+xml')
+    except Exception:
+        return ('', 204)
 
 def gc_scan_php(target, hash, filename):
     tool_dir = os.path.join(ROOT_DIR, "tools", "php", "PFortifier")
