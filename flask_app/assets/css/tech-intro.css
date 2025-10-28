@@ -62,8 +62,8 @@
 }
 
 .tech-desc {
-    height: 300px;
-    overflow-y: auto;
+    height: 480px;
+    overflow-y: visible;
     line-height: 1.7;
     color: #495057;
 }
