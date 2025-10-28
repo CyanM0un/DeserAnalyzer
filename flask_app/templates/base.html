@@ -67,26 +67,26 @@
                     
                     <!-- 导航链接 - 桌面版（添加滑动指示器与过渡） -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8 nav-links js-nav relative">
-                        <a href="{{ url_for('index') }}"
-                           class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium {% if request.endpoint == 'index' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
+                                <a href="{{ url_for('index') }}"
+                                    class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-base md:text-lg font-medium {% if request.endpoint == 'index' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
                            data-nav
                            {% if request.endpoint == 'index' %}data-active="true"{% endif %}>
                             <span class="nav-label">首页</span>
                         </a>
-                        <a href="{{ url_for('analyze') }}"
-                           class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium {% if request.endpoint == 'analyze' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
+                                <a href="{{ url_for('analyze') }}"
+                                    class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-base md:text-lg font-medium {% if request.endpoint == 'analyze' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
                            data-nav
                            {% if request.endpoint == 'analyze' %}data-active="true"{% endif %}>
                             <span class="nav-label">分析</span>
                         </a>
-                        <a href="{{ url_for('result') }}"
-                           class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium {% if request.endpoint == 'result' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
+                                <a href="{{ url_for('result') }}"
+                                    class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-base md:text-lg font-medium {% if request.endpoint == 'result' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
                            data-nav
                            {% if request.endpoint == 'result' %}data-active="true"{% endif %}>
                             <span class="nav-label">结果</span>
                         </a>
-                        <a href="{{ url_for('about') }}"
-                           class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium {% if request.endpoint == 'about' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
+                                <a href="{{ url_for('about') }}"
+                                    class="nav-link inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-base md:text-lg font-medium {% if request.endpoint == 'about' %}text-[#0F766E]{% else %}text-gray-500 hover:text-gray-700{% endif %}"
                            data-nav
                            {% if request.endpoint == 'about' %}data-active="true"{% endif %}>
                             <span class="nav-label">关于</span>
