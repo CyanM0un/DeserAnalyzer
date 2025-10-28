@@ -488,7 +488,7 @@ def _resolve_audit_Java_file(proj_root, raw_path, file_hash):
             if not file.endswith(".java"):
                 continue
             full = os.path.join(root, file)
-            if raw_norm in norm(full):
+            if raw_norm in norm(full) and raw_norm.split("/")[-1] == file.rstrip(".java"):
                 ret = full
                 break
         if ret:

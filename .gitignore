@@ -3,4 +3,5 @@ __pycache__
 **/output/**
 **/uploads/**
 /tools/java/time
+/tools/java_decompile/jdk
 .env
