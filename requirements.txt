@@ -4,3 +4,4 @@ python-dotenv
 gunicorn
 gevent
 PyYAML
+py2neo
