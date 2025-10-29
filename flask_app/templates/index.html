@@ -14,7 +14,7 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6 d-flex justify-content-center ps-lg-4">
-                    <img src="{{ url_for('static', filename='images/1.png') }}" alt="反序列化漏洞检测系统" class="img-fluid rounded shadow w-75">
+                    <img src="{{ url_for('static', filename='images/1.png') }}" alt="反序列化漏洞检测系统" class="img-fluid rounded shadow" style="width: 80%;">
                 </div>
 
                 <div class="col-lg-6 d-flex align-items-center">
@@ -122,8 +122,8 @@
                 <div class="col-lg-6">
                     <div class="bg-white p-5 rounded shadow h-100">
                         <div class="d-flex align-items-center mb-4">
-                            <div class="feature-icon me-4" style="color: #28a745;">
-                                <i class="fas fa-shield-alt fa-3x"></i>
+                            <div class="feature-icon me-4">
+                                <img src="{{ url_for('static', filename='images/shield.png') }}" alt="智能检测平台" style="width: 120px; height: 120px;">
                             </div>
                             <h3 class="fw-bold mb-0" style="font-size: 1.8rem; letter-spacing: 0.5px; color: #2d3436; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                                 智能检测平台应运而生
@@ -305,7 +305,7 @@
                     <div class="slider-item active">
                         <div class="row align-items-stretch">
                             <!-- 左侧文字区域（3列） -->
-                            <div class="col-lg-4 slider-text">
+                            <div class="col-lg-3 slider-text">
                                 <div class="text-content">
                                     <h3 class="section-title">PHP Gadget Chain检测</h3>
                                     <p class="section-desc">
@@ -317,11 +317,14 @@
                                 </div>
                             </div>
                             
-                            <!-- 右侧动态表格区域（7列） -->
-                            <div class="col-lg-8 dynamic-table-container"
-                                data-json-file="{{ url_for('static', filename='table/php_result.json') }}"
-                                data-table-type="php">
-                                <!-- 表格将在这里动态生成 -->
+                            <!-- 中间PHP工具对比柱状图区域（5列） -->
+                            <div class="col-lg-5 php-chart-container">
+                                <canvas id="php-tools-chart" style="max-height: 500px;"></canvas>
+                            </div>
+                            
+                            <!-- 右侧新增饼状图区域（4列） -->
+                            <div class="col-lg-4 php-pie-chart-container">
+                                <canvas id="php-pie-chart" style="max-height: 500px;"></canvas>
                             </div>
                         </div>
                     </div>
@@ -330,7 +333,7 @@
                     <div class="slider-item">
                         <div class="row align-items-stretch">
                             <!-- 左侧文字区域（3列） -->
-                            <div class="col-lg-4 slider-text">
+                            <div class="col-lg-3 slider-text">
                                 <div class="text-content">
                                     <h3 class="section-title">Java Gadget Chain检测</h3>
                                     <p class="section-desc">
@@ -341,11 +344,14 @@
                                 </div>
                             </div>
                             
-                            <!-- 右侧动态表格区域（7列） -->
-                            <div class="col-lg-8 dynamic-table-container"
-                                data-json-file="{{ url_for('static', filename='table/java_result.json') }}"
-                                data-table-type="java">
-                                <!-- 表格将在这里动态生成 -->
+                            <!-- 中间Java工具对比柱状图区域（5列） -->
+                            <div class="col-lg-5 java-chart-container">
+                                <canvas id="java-tools-chart" style="max-height: 500px;"></canvas>
+                            </div>
+                            
+                            <!-- 右侧新增饼状图区域（4列） -->
+                            <div class="col-lg-4 pie-chart-container">
+                                <canvas id="java-pie-chart" style="max-height: 500px;"></canvas>
                             </div>
                         </div>
                     </div> 
@@ -417,4 +423,491 @@
 <script src="{{ url_for('static', filename='js/seamless-slider.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tech-intro.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dynamic-table.js') }}"></script>
+
+<script>
+// Java工具对比柱状图数据
+const javaToolsData = {
+    tools: ['TABBY', 'CRYSTALLIZER', 'JDD', 'FLASH'],
+    dimensions: ['FNR（漏报率）', 'FPR（误报率）', 'GC总数'],
+    data: {
+        'TABBY': { FNR: 0.464, FPR: 0.669, 'GC总数': 55 },
+        'CRYSTALLIZER': { FNR: 0.857, FPR: 0.77, 'GC总数': 20 },
+        'JDD': { FNR: 0.607, FPR: 0, 'GC总数': 57 },
+        'FLASH': { FNR: 0.321, FPR: 0.496, 'GC总数': 128 }
+    }
+};
+
+// 颜色配置
+const chartColors = {
+    primary: 'rgba(15, 118, 110, 0.8)',
+    primaryBorder: 'rgba(15, 118, 110, 1)',
+    secondary: 'rgba(13, 148, 136, 0.8)',
+    accent: 'rgba(20, 184, 166, 0.8)'
+};
+
+// 初始化Java工具对比柱状图
+function initJavaToolsChart() {
+    const ctx = document.getElementById('java-tools-chart');
+    if (!ctx) return;
+    
+    // 多维度数据配置
+    const multiDimensionData = {
+        labels: javaToolsData.tools,
+        datasets: [
+            {
+                label: 'FNR（漏报率）',
+                data: javaToolsData.tools.map(tool => javaToolsData.data[tool].FNR),
+                backgroundColor: 'rgba(220, 53, 69, 0.8)', // 红色
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 2,
+                borderRadius: 4,
+                borderSkipped: false,
+                yAxisID: 'y'  // 使用左侧Y轴
+            },
+            {
+                label: 'FPR（误报率）',
+                data: javaToolsData.tools.map(tool => javaToolsData.data[tool].FPR),
+                backgroundColor: 'rgba(255, 193, 7, 0.8)', // 黄色
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 2,
+                borderRadius: 4,
+                borderSkipped: false,
+                yAxisID: 'y'  // 使用左侧Y轴
+            },
+            {
+                label: 'GC总数',
+                data: javaToolsData.tools.map(tool => javaToolsData.data[tool]['GC总数']),
+                backgroundColor: 'rgba(40, 167, 69, 0.8)', // 绿色
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 2,
+                borderRadius: 4,
+                borderSkipped: false,
+                yAxisID: 'y1'  // 使用右侧Y轴
+            }
+        ]
+    };
+    
+    // 创建分组柱状图
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: multiDimensionData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Java工具多维度性能对比',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: {
+                        size: 13
+                    },
+                    bodyFont: {
+                        size: 12
+                    },
+                    padding: 10,
+                    cornerRadius: 4,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            let value = context.parsed.y;
+
+                            // 特别处理数值为0的情况，直接显示"-"
+                            if (value === 0) {
+                                return `${label}: -`;
+                            }
+                            
+                            // 根据数据类型格式化显示
+                            if (label.includes('FNR') || label.includes('FPR')) {
+                                return `${label}: ${value.toFixed(2)} (${(value * 100).toFixed(1)}%)`;
+                            } else {
+                                return `${label}: ${value}`;
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: '检测工具',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    title: {
+                        display: true,
+                        text: 'FNR/FPR（比率）',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    },
+                    position: 'left',
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                        callback: function(value) {
+                            // 显示为百分比
+                            return (value * 100).toFixed(0) + '%';
+                        }
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    title: {
+                        display: true,
+                        text: 'GC总数',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        }
+                    },
+                    position: 'right',
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
+            animation: false
+        }
+    });
+}
+
+// PHP工具数据定义（数据直接嵌入）
+const phpToolsData = {
+    tools: ['FUGIO', 'PFORTIFIER'],
+    dimensions: ['FNR（漏报率）', 'FPR（误报率）', 'GC总数'],
+    data: {
+        "FUGIO": { "FNR": 0.5116, "FPR": 0.7756, "GC总数": 30 },
+        "PFORTIFIER": { "FNR": 0.1628, "FPR": 0.6869, "GC总数": 92}
+    }
+};
+
+// 初始化PHP工具对比柱状图
+function initPhpToolsChart() {
+    const ctx = document.getElementById('php-tools-chart');
+    if (!ctx) return;
+    
+    // 多维度数据配置（使用嵌入数据）
+    const multiDimensionData = {
+        labels: phpToolsData.tools,
+        datasets: [
+            {
+                label: 'FNR（漏报率）',
+                data: phpToolsData.tools.map(tool => phpToolsData.data[tool].FNR),
+                backgroundColor: 'rgba(220, 53, 69, 0.8)', // 红色
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 2,
+                borderRadius: 4,
+                yAxisID: 'y'
+            },
+            {
+                label: 'FPR（误报率）',
+                data: phpToolsData.tools.map(tool => phpToolsData.data[tool].FPR),
+                backgroundColor: 'rgba(255, 193, 7, 0.8)', // 黄色
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 2,
+                borderRadius: 4,
+                yAxisID: 'y'
+            },
+            {
+                label: 'GC总数',
+                data: phpToolsData.tools.map(tool => phpToolsData.data[tool]['GC总数']),
+                backgroundColor: 'rgba(40, 167, 69, 0.8)', // 绿色
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 2,
+                borderRadius: 4,
+                yAxisID: 'y1'
+            }
+        ]
+    };
+    
+    // 创建图表
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: multiDimensionData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'PHP工具多维度性能对比',
+                    font: { size: 16, weight: 'bold' },
+                    padding: 20
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: { size: 12, weight: 'bold' }
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            let value = context.parsed.y;
+                            if (label.includes('FNR') || label.includes('FPR')) {
+                                return `${label}: ${value.toFixed(2)} (${(value * 100).toFixed(1)}%)`;
+                            } else {
+                                return `${label}: ${value}`;
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    title: { 
+                        display: true, 
+                        text: '检测工具',
+                        font: { size: 13, weight: 'bold' }
+                    },
+                    ticks: {
+                        font: { size: 12, weight: 'bold' },
+                        color: '#333',
+                        padding: 10,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        autoSkip: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                    title: { 
+                        display: true, 
+                        text: 'FNR/FPR（比率）',
+                        font: { size: 13, weight: 'bold' }
+                    },
+                    position: 'left',
+                    ticks: {
+                        font: { size: 11 },
+                        callback: function(value) {
+                            return (value * 100).toFixed(0) + '%';
+                        }
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    grid: { drawOnChartArea: false },
+                    title: { 
+                        display: true, 
+                        text: 'GC总数',
+                        font: { size: 13, weight: 'bold' }
+                    },
+                    position: 'right',
+                    ticks: { font: { size: 11 } }
+                }
+            },
+            animation: false
+        }
+    });
+}
+
+// Java工具饼状图数据定义
+const javaPieData = {
+    tools: ['TABBY', 'CRYSTALLIZER', 'JDD', 'FLASH'],
+    data: {
+        'TABBY': 55,    // GC总数
+        'CRYSTALLIZER': 20,
+        'JDD': 57,
+        'FLASH': 128
+    },
+    colors: [
+        'rgba(220, 53, 69, 0.8)',   // 红色 - TABBY
+        'rgba(255, 193, 7, 0.8)',   // 黄色 - CRYSTALLIZER
+        'rgba(40, 167, 69, 0.8)',   // 绿色 - JDD
+        'rgba(0, 123, 255, 0.8)'    // 蓝色 - FLASH
+    ]
+};
+
+// 初始化Java工具饼状图
+function initJavaPieChart() {
+    const ctx = document.getElementById('java-pie-chart');
+    if (!ctx) return;
+    
+    const pieData = {
+        labels: javaPieData.tools,
+        datasets: [{
+            data: javaPieData.tools.map(tool => javaPieData.data[tool]),
+            backgroundColor: javaPieData.colors,
+            borderColor: javaPieData.colors.map(color => color.replace('0.8', '1')),
+            borderWidth: 2,
+            hoverOffset: 15
+        }]
+    };
+    
+    const chart = new Chart(ctx, {
+        type: 'pie',
+        data: pieData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'GC总数分布',
+                    font: { size: 16, weight: 'bold' },
+                    padding: 20
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: { size: 12, weight: 'bold' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: false
+        }
+    });
+}
+
+// PHP工具饼状图数据定义
+const phpPieData = {
+    tools: ['FUGIO', 'PFORTIFIER'],
+    data: {
+        'FUGIO': 30,    // GC总数
+        'PFORTIFIER': 92
+    },
+    colors: [
+        'rgba(220, 53, 69, 0.8)',   // 红色 - FUGIO
+        'rgba(0, 123, 255, 0.8)'    // 蓝色 - PFORTIFIER
+    ]
+};
+
+// 初始化PHP工具饼状图
+function initPhpPieChart() {
+    const ctx = document.getElementById('php-pie-chart');
+    if (!ctx) return;
+    
+    const pieData = {
+        labels: phpPieData.tools,
+        datasets: [{
+            data: phpPieData.tools.map(tool => phpPieData.data[tool]),
+            backgroundColor: phpPieData.colors,
+            borderColor: phpPieData.colors.map(color => color.replace('0.8', '1')),
+            borderWidth: 2,
+            hoverOffset: 15
+        }]
+    };
+    
+    const chart = new Chart(ctx, {
+        type: 'pie',
+        data: pieData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'GC总数分布',
+                    font: { size: 16, weight: 'bold' },
+                    padding: 20
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: { size: 12, weight: 'bold' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: false
+        }
+    });
+}
+
+// 页面加载完成后初始化图表
+document.addEventListener('DOMContentLoaded', function() {
+    initJavaToolsChart();
+    initPhpToolsChart();
+    initJavaPieChart();  // 新增饼状图初始化
+    initPhpPieChart();   // 新增PHP饼状图初始化
+});
+</script>
 {% endblock %}

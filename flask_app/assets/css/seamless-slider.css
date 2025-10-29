@@ -1,7 +1,7 @@
 /* 无缝图片滑块样式 */
 .seamless-slider {
     position: relative;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .slider-item .row {
-    height: 400px;
+    height: 500px;
 }
 
 /* 文字区域样式 */
