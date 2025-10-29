@@ -423,6 +423,7 @@
 <script src="{{ url_for('static', filename='js/seamless-slider.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tech-intro.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dynamic-table.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
 <script>
 // Java工具对比柱状图数据
@@ -437,13 +438,108 @@ const javaToolsData = {
     }
 };
 
-// 颜色配置
+// 绿色系配色配置
 const chartColors = {
-    primary: 'rgba(15, 118, 110, 0.8)',
-    primaryBorder: 'rgba(15, 118, 110, 1)',
-    secondary: 'rgba(13, 148, 136, 0.8)',
-    accent: 'rgba(20, 184, 166, 0.8)'
+    // 绿色系基础色 - 由深到浅
+    darkGreen: 'rgba(0, 100, 0, 0.8)',      // 深绿色
+    mediumDarkGreen: 'rgba(34, 139, 34, 0.8)', // 中深绿色
+    mediumGreen: 'rgba(60, 179, 113, 0.8)',   // 中绿色
+    lightGreen: 'rgba(144, 238, 144, 0.8)',    // 浅绿色
+    white: 'rgba(255, 255, 255, 0.8)',
+    
+    // 边框色 - 对应绿色系
+    borderDarkGreen: 'rgba(0, 100, 0, 1)',
+    borderMediumGreen: 'rgba(60, 179, 113, 1)',
+    borderLightGreen: 'rgba(144, 238, 144, 1)'
 };
+
+// 花纹图案定义和图案生成器
+const patterns = {
+    diagonal: function(ctx, color) {
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = 10;
+        patternCanvas.height = 10;
+        const patternCtx = patternCanvas.getContext('2d');
+        
+        patternCtx.strokeStyle = color || 'rgba(0, 0, 0, 1)';
+        patternCtx.lineWidth = 1;
+        patternCtx.beginPath();
+        patternCtx.moveTo(0, 0);
+        patternCtx.lineTo(10, 10);
+        patternCtx.stroke();
+        
+        return ctx.createPattern(patternCanvas, 'repeat');
+    },
+    dots: function(ctx, color) {
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = 6;
+        patternCanvas.height = 6;
+        const patternCtx = patternCanvas.getContext('2d');
+        
+        patternCtx.fillStyle = color || 'rgba(0, 0, 0, 1)';
+        patternCtx.fillRect(0, 0, 2, 2);
+        patternCtx.fillRect(4, 4, 2, 2);
+        
+        return ctx.createPattern(patternCanvas, 'repeat');
+    },
+    lines: function(ctx, color) {
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = 10;
+        patternCanvas.height = 10;
+        const patternCtx = patternCanvas.getContext('2d');
+        
+        patternCtx.strokeStyle = color || 'rgba(0, 0, 0, 0.4)';
+        patternCtx.lineWidth = 1;
+        patternCtx.beginPath();
+        patternCtx.moveTo(0, 5);
+        patternCtx.lineTo(10, 5);
+        patternCtx.stroke();
+        
+        return ctx.createPattern(patternCanvas, 'repeat');
+    },
+    cross: function(ctx, color) {
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = 10;
+        patternCanvas.height = 10;
+        const patternCtx = patternCanvas.getContext('2d');
+        
+        patternCtx.strokeStyle = color || 'rgba(0, 0, 0, 1)';
+        patternCtx.lineWidth = 1;
+        patternCtx.beginPath();
+        patternCtx.moveTo(0, 0);
+        patternCtx.lineTo(10, 10);
+        patternCtx.moveTo(10, 0);
+        patternCtx.lineTo(0, 10);
+        patternCtx.stroke();
+        
+        return ctx.createPattern(patternCanvas, 'repeat');
+    }
+};
+
+// 图案填充插件
+const patternFillPlugin = {
+    id: 'patternFill',
+    beforeDraw: function(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex);
+            if (meta.hidden) return;
+            
+            meta.data.forEach((element, index) => {
+                const patternType = dataset.patternType;
+                if (patternType && patterns[patternType]) {
+                    const pattern = patterns[patternType](ctx, dataset.patternColor);
+                    if (pattern) {
+                        element.options.backgroundColor = pattern;
+                    }
+                }
+            });
+        });
+    }
+};
+
+// 注册图案填充插件
+Chart.register(patternFillPlugin);
 
 // 初始化Java工具对比柱状图
 function initJavaToolsChart() {
@@ -457,31 +553,28 @@ function initJavaToolsChart() {
             {
                 label: 'FNR（漏报率）',
                 data: javaToolsData.tools.map(tool => javaToolsData.data[tool].FNR),
-                backgroundColor: 'rgba(220, 53, 69, 0.8)', // 红色
-                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: chartColors.darkGreen, // 深绿色
+                borderColor: 'rgba(0, 100, 0, 1)',
                 borderWidth: 2,
                 borderRadius: 4,
-                borderSkipped: false,
                 yAxisID: 'y'  // 使用左侧Y轴
             },
             {
                 label: 'FPR（误报率）',
                 data: javaToolsData.tools.map(tool => javaToolsData.data[tool].FPR),
-                backgroundColor: 'rgba(255, 193, 7, 0.8)', // 黄色
-                borderColor: 'rgba(255, 193, 7, 1)',
+                backgroundColor: chartColors.mediumDarkGreen, // 中深绿色
+                borderColor: 'rgba(34, 139, 34, 1)',
                 borderWidth: 2,
                 borderRadius: 4,
-                borderSkipped: false,
                 yAxisID: 'y'  // 使用左侧Y轴
             },
             {
                 label: 'GC总数',
                 data: javaToolsData.tools.map(tool => javaToolsData.data[tool]['GC总数']),
-                backgroundColor: 'rgba(40, 167, 69, 0.8)', // 绿色
-                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: chartColors.mediumGreen, // 中绿色
+                borderColor: chartColors.borderMediumGreen,
                 borderWidth: 2,
                 borderRadius: 4,
-                borderSkipped: false,
                 yAxisID: 'y1'  // 使用右侧Y轴
             }
         ]
@@ -517,33 +610,24 @@ function initJavaToolsChart() {
                     }
                 },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleFont: {
-                        size: 13
-                    },
-                    bodyFont: {
+                    enabled: false
+                },
+                datalabels: {
+                    display: true,
+                    color: '#000',
+                    font: {
+                        weight: 'bold',
                         size: 12
                     },
-                    padding: 10,
-                    cornerRadius: 4,
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.dataset.label || '';
-                            let value = context.parsed.y;
-
-                            // 特别处理数值为0的情况，直接显示"-"
-                            if (value === 0) {
-                                return `${label}: -`;
-                            }
-                            
-                            // 根据数据类型格式化显示
-                            if (label.includes('FNR') || label.includes('FPR')) {
-                                return `${label}: ${value.toFixed(2)} (${(value * 100).toFixed(1)}%)`;
-                            } else {
-                                return `${label}: ${value}`;
-                            }
+                    anchor: 'end',   // 锚在柱子的顶端
+                    align: 'top',    // 文字对齐到柱子顶部
+                    offset: 2,       // 离柱子顶部的距离（像素）
+                    formatter: function(value, context) {
+                        const datasetLabel = context.dataset.label;
+                        if (datasetLabel && (datasetLabel.includes('FNR') || datasetLabel.includes('FPR'))) {
+                            return (value * 100).toFixed(1) + '%';
+                        } else {
+                            return value;
                         }
                     }
                 }
@@ -587,7 +671,6 @@ function initJavaToolsChart() {
                             size: 11
                         },
                         callback: function(value) {
-                            // 显示为百分比
                             return (value * 100).toFixed(0) + '%';
                         }
                     }
@@ -645,8 +728,8 @@ function initPhpToolsChart() {
             {
                 label: 'FNR（漏报率）',
                 data: phpToolsData.tools.map(tool => phpToolsData.data[tool].FNR),
-                backgroundColor: 'rgba(220, 53, 69, 0.8)', // 红色
-                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: chartColors.darkGreen, // 深绿色
+                borderColor: 'rgba(0, 100, 0, 1)',
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y'
@@ -654,8 +737,8 @@ function initPhpToolsChart() {
             {
                 label: 'FPR（误报率）',
                 data: phpToolsData.tools.map(tool => phpToolsData.data[tool].FPR),
-                backgroundColor: 'rgba(255, 193, 7, 0.8)', // 黄色
-                borderColor: 'rgba(255, 193, 7, 1)',
+                backgroundColor: chartColors.mediumDarkGreen, // 中深绿色
+                borderColor: 'rgba(34, 139, 34, 1)',
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y'
@@ -663,8 +746,8 @@ function initPhpToolsChart() {
             {
                 label: 'GC总数',
                 data: phpToolsData.tools.map(tool => phpToolsData.data[tool]['GC总数']),
-                backgroundColor: 'rgba(40, 167, 69, 0.8)', // 绿色
-                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: chartColors.mediumGreen, // 中绿色
+                borderColor: chartColors.borderMediumGreen,
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y1'
@@ -696,18 +779,24 @@ function initPhpToolsChart() {
                     }
                 },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.dataset.label || '';
-                            let value = context.parsed.y;
-                            if (label.includes('FNR') || label.includes('FPR')) {
-                                return `${label}: ${value.toFixed(2)} (${(value * 100).toFixed(1)}%)`;
-                            } else {
-                                return `${label}: ${value}`;
-                            }
+                    enabled: false
+                },
+                datalabels: {
+                    display: true,
+                    color: '#000',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    anchor: 'end',   // 锚在柱子的顶端
+                    align: 'top',    // 文字对齐到柱子顶部
+                    offset: 2,       // 离柱子顶部的距离（像素）
+                    formatter: function(value, context) {
+                        const datasetLabel = context.dataset.label;
+                        if (datasetLabel && (datasetLabel.includes('FNR') || datasetLabel.includes('FPR'))) {
+                            return (value * 100).toFixed(1) + '%';
+                        } else {
+                            return value;
                         }
                     }
                 }
@@ -772,10 +861,10 @@ const javaPieData = {
         'FLASH': 128
     },
     colors: [
-        'rgba(220, 53, 69, 0.8)',   // 红色 - TABBY
-        'rgba(255, 193, 7, 0.8)',   // 黄色 - CRYSTALLIZER
-        'rgba(40, 167, 69, 0.8)',   // 绿色 - JDD
-        'rgba(0, 123, 255, 0.8)'    // 蓝色 - FLASH
+        chartColors.darkGreen,           // 深绿色 - TABBY
+        chartColors.mediumDarkGreen,     // 中深绿色 - CRYSTALLIZER
+        chartColors.mediumGreen,         // 中绿色 - JDD
+        chartColors.lightGreen          // 浅绿色 - FLASH
     ]
 };
 
@@ -791,7 +880,8 @@ function initJavaPieChart() {
             backgroundColor: javaPieData.colors,
             borderColor: javaPieData.colors.map(color => color.replace('0.8', '1')),
             borderWidth: 2,
-            hoverOffset: 15
+            hoverOffset: 15,
+            patternType: ['diagonal', 'dots', 'lines', 'cross'] // 为每个扇区分配不同的花纹
         }]
     };
     
@@ -818,14 +908,17 @@ function initJavaPieChart() {
                     }
                 },
                 tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} (${percentage}%)`;
-                        }
+                    enabled: false
+                },
+                datalabels: {
+                    display: true,
+                    color: '#000',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: function(value) {
+                        return value;
                     }
                 }
             },
@@ -842,8 +935,8 @@ const phpPieData = {
         'PFORTIFIER': 92
     },
     colors: [
-        'rgba(220, 53, 69, 0.8)',   // 红色 - FUGIO
-        'rgba(0, 123, 255, 0.8)'    // 蓝色 - PFORTIFIER
+        chartColors.darkGreen,           // 深绿色 - FUGIO
+        chartColors.mediumGreen         // 中绿色 - PFORTIFIER
     ]
 };
 
@@ -859,7 +952,8 @@ function initPhpPieChart() {
             backgroundColor: phpPieData.colors,
             borderColor: phpPieData.colors.map(color => color.replace('0.8', '1')),
             borderWidth: 2,
-            hoverOffset: 15
+            hoverOffset: 15,
+            patternType: ['diagonal', 'dots'] // 为每个扇区分配不同的花纹
         }]
     };
     
@@ -886,14 +980,17 @@ function initPhpPieChart() {
                     }
                 },
                 tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} (${percentage}%)`;
-                        }
+                    enabled: false
+                },
+                datalabels: {
+                    display: true,
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: function(value) {
+                        return value;
                     }
                 }
             },
@@ -904,10 +1001,11 @@ function initPhpPieChart() {
 
 // 页面加载完成后初始化图表
 document.addEventListener('DOMContentLoaded', function() {
+    Chart.register(ChartDataLabels);
     initJavaToolsChart();
     initPhpToolsChart();
-    initJavaPieChart();  // 新增饼状图初始化
-    initPhpPieChart();   // 新增PHP饼状图初始化
+    initJavaPieChart();
+    initPhpPieChart();
 });
 </script>
 {% endblock %}
