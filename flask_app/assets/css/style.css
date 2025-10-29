@@ -78,11 +78,12 @@ body {
 }
 
 .section-title {
-    font-size: 2.5rem;
+    font-size: 2.5rem; /* 统一：所有板块主标题 */
     font-weight: 600;
     margin-bottom: 1rem;
     background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
-    -webkit-background-clip: text;
+    background-clip: text; /* standard */
+    -webkit-background-clip: text; /* Safari/iOS */
     -webkit-text-fill-color: transparent;
 }
 
@@ -104,6 +105,28 @@ body {
     text-align: center;
     color: var(--text-gray);
     font-size: 1.1rem;
+}
+
+/* -------- 首页正文字体统一（标题/副标题/段落） -------- */
+.section p {
+    font-size: 1rem;         /* 统一：正文大小 */
+    line-height: 1.75;       /* 更好的可读性 */
+    color: var(--text-dark);
+}
+
+.section h3 {
+    font-size: 2rem;       /* 统一：二级小标题 */
+}
+
+.section h5 {
+    font-size: 1.25rem;      /* 统一：功能点标题/卡片标题 */
+}
+
+/* 列表型小标题（如“后果严重/影响广泛/隐蔽性高”） */
+.section .list-group-item strong {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: var(--text-dark);
 }
 
 .feature-card {
