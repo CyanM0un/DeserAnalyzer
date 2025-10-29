@@ -19,10 +19,10 @@
 
                 <div class="col-lg-6 d-flex align-items-center">
                     <div class="text-center text-lg-start">
-                        <h2 class="display-4 fw-bold mb-4" style="color: var(--primary-blue);">
+                        <h2 class="section-title fw-bold mb-4">
                             反序列化漏洞检测与防护
                         </h2>
-                        <p class="lead fs-5" style="color: var(--text-dark);">
+                        <p>
                             抵御反序列化漏洞风险
                         </p>
                         <a href="{{ url_for('analyze') }}" class="btn btn-lg mt-3" style="width: 200px; background-color: var(--primary-blue); color: white;">
@@ -38,7 +38,7 @@
         <div class="container">
             <div class="row justify-content-center mb-10">
                 <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold" style="font-size: 2.2rem;">漏洞形成原理</h2>
+                    <h2 class="section-title fw-bold">漏洞形成原理</h2>
                 </div>
             </div>
             
@@ -48,15 +48,15 @@
                 <div class="col-lg-4 mb-8 mb-lg-0 d-flex">
                     <div class="bg-white p-6 rounded shadow w-100">
                         <h3 class="fw-bold mb-4" style="color: var(--primary-blue);">什么是序列化与反序列化？</h3>
-                        <p class="mb-4" style="line-height: 1.8; font-size: 1.1rem;">
+                        <p class="mb-4">
                             <strong>序列化</strong>是将对象的状态信息转换为可存储或传输形式的过程，通常转换为字节流或文件，以便传输。
                         </p>
-                        <p class="mb-4" style="line-height: 1.8; font-size: 1.1rem;">
+                        <p class="mb-4">
                             <strong>反序列化</strong>则是序列化的逆过程，将字节流或字符串恢复为原始对象，其作为编程语言的机制广泛应用于分布式系统、缓存、会话管理等场景。
                         </p>
                         
                         <h3 class="fw-bold mb-4 mt-6" style="color: var(--primary-blue);">漏洞产生的原因</h3>
-                        <p class="mb-4" style="line-height: 1.8; font-size: 1.1rem;">
+                        <p class="mb-4">
                             攻击者可以构造恶意的序列化数据，当应用程序对此进行反序列化操作且没有进行安全检查时，攻击者可以通过操作类方法<strong>劫持控制流</strong>，从而抵达危险函数，造成反序列化漏洞攻击。
                         </p>
                     </div>
@@ -88,7 +88,7 @@
                             <div class="feature-icon me-4" style="color: #dc3545;">
                                 <i class="fas fa-exclamation-triangle fa-3x"></i>
                             </div>
-                            <h3 class="fw-bold mb-0" style="font-size: 1.8rem; letter-spacing: 0.5px; color: #2d3436; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            <h3 class="fw-bold mb-0" style="letter-spacing: 0.5px; color: #2d3436; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                                 反序列化漏洞危害严重
                             </h3>
                         </div>
@@ -125,7 +125,7 @@
                             <div class="feature-icon me-4">
                                 <img src="{{ url_for('static', filename='images/shield.png') }}" alt="智能检测平台" style="width: 120px; height: 120px;">
                             </div>
-                            <h3 class="fw-bold mb-0" style="font-size: 1.8rem; letter-spacing: 0.5px; color: #2d3436; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            <h3 class="fw-bold mb-0" style="letter-spacing: 0.5px; color: #2d3436; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                                 智能检测平台应运而生
                             </h3>
                         </div>
@@ -163,7 +163,7 @@
         <div class="container">
             <div class="row justify-content-center mb-10">
                 <div class="col-lg-8 text-center">
-                    <h2 class="section-title fw-bold" style="font-size: 2.2rem;">核心功能</h2>
+                    <h2 class="section-title fw-bold">核心功能</h2>
                 </div>
             </div>
             <div class="row g-8 justify-content-center">
@@ -172,8 +172,8 @@
                     <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-search fa-2x text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">漏洞链检测</h5>
-                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">更精确的静态分析助力全面检测反序列化漏洞链</p>
+                    <h5 class="fw-bold mb-3 mt-3">漏洞链检测</h5>
+                    <p class="text-muted">更精确的静态分析助力全面检测反序列化漏洞链</p>
                 </div>
                 
                 <!-- 链接分析 -->
@@ -181,8 +181,8 @@
                     <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-link fa-2x text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">利用链分析</h5>
-                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">在线审计+AI辅助深度分析漏洞利用链</p>
+                    <h5 class="fw-bold mb-3 mt-3">利用链分析</h5>
+                    <p class="text-muted">在线审计+AI辅助深度分析漏洞利用链</p>
                 </div>
                 
                 <!-- 实时监控 -->
@@ -190,8 +190,8 @@
                     <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-eye fa-2x text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">实时监控</h5>
-                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">全时段漏洞分析与安全状态监控</p>
+                    <h5 class="fw-bold mb-3 mt-3">实时监控</h5>
+                    <p class="text-muted">全时段漏洞分析与安全状态监控</p>
                 </div>
                 
                 <!-- 报告生成 -->
@@ -199,8 +199,8 @@
                     <div class="feature-icon mb-4 p-4 rounded-circle bg-primary/10" style="width: 80px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-file-alt fa-2x text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-3 mt-3" style="font-size: 1.25rem;">宏观统计</h5>
-                    <p class="text-muted" style="font-size: 1rem; line-height: 1.5;">多维度可视化报表呈现漏洞趋势宏观统计</p>
+                    <h5 class="fw-bold mb-3 mt-3">宏观统计</h5>
+                    <p class="text-muted">多维度可视化报表呈现漏洞趋势宏观统计</p>
                 </div>
             </div>
         </div>
@@ -211,13 +211,13 @@
         <div class="container-fluid">  <!-- 全宽容器，避免固定宽度限制 -->
             <div class="row justify-content-center mb-10">
                 <div class="col-lg-12 text-center">
-                    <h2 class="section-title fw-bold" style="font-size: 2.2rem;">技术概要</h2>
+                    <h2 class="section-title fw-bold">技术概要</h2>
                 </div>
                 
                 <!-- 技术介绍模块 - 使用flex布局实现自适应高度 -->
                 <div class="tech-intro-container row mt-10" style="width: 100%; display: flex; align-items: stretch;">
                     <!-- 左侧索引 - 固定宽度，高度自适应内容 -->
-                    <div class="tech-nav col-lg-2 col-md-3" style="padding: 40px 20px; font-size: 1.1rem; background-color: #f8f9fa; border-radius: 8px 0 0 8px;">
+                    <div class="tech-nav col-lg-2 col-md-3" style="padding: 40px 20px; background-color: #f8f9fa; border-radius: 8px 0 0 8px;">
                         <ul class="nav-list list-unstyled">
                             <li class="nav-item active" data-target="tech1">基于AST模拟执行的PHP Gadget Chain检测</li>
                             <li class="nav-item" data-target="tech2">基于反序列化引导调用图构建的Java Gadget Chain检测</li>
@@ -230,9 +230,9 @@
                         <div class="content-item active" id="tech1">
                             <div class="content-header">
                                 <i class="fas fa-code me-3" style="font-size: 1.5rem;"></i>
-                                <h3 class="tech-title" style="font-size: 1.8rem;">基于AST模拟执行的PHP Gadget Chain检测</h3>
+                                <h3 class="tech-title">基于AST模拟执行的PHP Gadget Chain检测</h3>
                             </div>
-                            <div class="tech-desc" style="margin-top: 30px; line-height: 2.0; font-size: 1.1rem;">
+                            <div class="tech-desc" style="margin-top: 30px;">
                                 <p>本系统基于<a href="https://github.com/HACHp1/PFortifier" target="_blank">PFortifier</a>工具进行PHP项目的Gadget Chain检测。PFortifier首先会先解析所有类、trait、接口与方法，建立类→方法和方法名→实现类的映射；随后其基于常见的反序列化入口（__unserialize、__destruct、__wakeup）进行模拟执行并标记可控对象做污点传播。为处理分支与动态调用，PFortifier采用局部变量抽象、分支克隆与贪心合并（优先保留含可控对象的分支）等策略，并通过PM_summary按方法名与参数可控性缓存合并结果与检测到的链以加速分析。</p>
                                 <img src="assets/images/php-workflow.png" alt="PFortifier" style="max-width: 80%; height: auto; display: block; margin: 30px auto; border: 1px solid #eee; padding: 15px; background-color: #fff;">
                             </div>
@@ -242,9 +242,9 @@
                         <div class="content-item" id="tech2">
                             <div class="content-header">
                                 <i class="fas fa-code me-3" style="font-size: 1.5rem;"></i>
-                                <h3 class="tech-title" style="font-size: 1.8rem;">基于反序列化引导调用图构建的Java Gadget Chain检测</h3>
+                                <h3 class="tech-title">基于反序列化引导调用图构建的Java Gadget Chain检测</h3>
                             </div>
-                            <div class="tech-desc" style="margin-top: 30px; line-height: 2.0; font-size: 1.1rem;">
+                            <div class="tech-desc" style="margin-top: 30px;">
                                 <p>本系统基于<a href="https://github.com/CGCL-codes/Flash" target="_blank">Flash</a>工具进行Java项目的Gadget Chain检测。Flash首先进行可控性分析，以确定变量是否可以通过反序列化来恢复。然后，它应用一种混合分派方法，根据接收变量的可控性在调用点解析被调用者：如果可控，Flash使用更全面但可能精度较低的技术（例如类层次分析法、代理分派）；否则，则应用更精确的技术（例如指针分析）。Flash还通过处理涉及可控变量的反射来恢复缺失的调用边，并过滤掉不相关的边，以提高准确率和效率</p>
                                 <img src="assets/images/java-workflow.png" alt="Flash流程图" style="max-width: 80%; height: auto; display: block; margin: 30px auto; border: 1px solid #eee; padding: 15px; background-color: #fff;">
                             </div>
@@ -339,7 +339,7 @@
                                     <p class="section-desc">
                                         Flash相比于现有的工具有着更低的漏报率（30.8）和误报率（25.9%），且在公开数据集中共检测到90条未知的漏洞利用链，表现最优
                                     </p>
-                                    <p class="section-desc" style="font-size: 1.1rem; margin-top: 15px;">
+                                    <p class="section-desc" style="margin-top: 15px;">
                                         相关论文<a href="https://www.usenix.org/conference/usenixsecurity25/presentation/zhang-yiheng" target="_blank" style="color: #007bff; text-decoration: none;">"Precise and Effective Gadget Chain Mining through Deserialization Guided Call Graph Construction"</a>已发表在<em>Proceedings of the 34th USENIX Security Symposium (USENIX Security 2025)</em>🎉</p>
                                 </div>
                             </div>

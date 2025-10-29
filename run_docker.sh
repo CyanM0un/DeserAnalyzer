@@ -12,11 +12,12 @@ if [ "$(docker ps -aq -f name=app)" ]; then
     docker rm app >/dev/null 2>&1 || true
 fi
 
-echo "启动 Docker 容器（带目录映射）..."
-docker run \
+echo "启动 Docker 容器..."
+docker run -d \
     --name app \
     -p 5000:5000 \
-    -v "$(pwd):/app" \
     app
+
+# -v "$(pwd):/app"
 
 echo "部署完成！"
