@@ -154,12 +154,38 @@
                 </div>
             </div>
             
+            <!-- 新增研究团队介绍区块（与成员卡片同宽） -->
+            <div class="row g-4 mb-8">
+                <div class="col-lg-12">
+                    <div class="member-card">
+                        <div class="d-flex align-items-center justify-content-between mb-4" style="position: relative;">
+                            <!-- 居中标题 -->
+                            <h3 class="lab-name mb-0 text-center w-100" style="font-weight: bold;">
+                                ARTS^3研究小组
+                            </h3>
+                            
+                            <!-- 右侧 LOGO -->
+                            <div class="team-logo-container" 
+                                style="position: absolute; right: 0; top: 50%; transform: translateY(-50%);">
+                                <img src="{{ url_for('static', filename='images/arts.png') }}" 
+                                    alt="研究团队LOGO" 
+                                    class="lab-logo"
+                                    style="max-width: 100px; height: auto;">
+                            </div>
+                        </div>
+                        <p class="member-bio">
+                            ARTS^3（<strong>A</strong>dvanced <strong>R</strong>esearch for <strong>T</strong>rustworthy and <strong>S</strong>ecure <strong>S</strong>oftware <strong>S</strong>ystems）研究团队由文明副教授领导，聚焦系统软件安全前沿研究，重点关注缺陷漏洞的检测，定位与修复，面向核心软件系统的测试技术（模糊测试，蜕变测试，差分测试等）以及代码大模型前沿研究。团队注重产学研结合，积极推动科研成果转化，如开发了GCSCAN等反序列化漏洞检测平台。且团队成员结构合理，包括博士生、硕士生及优秀本科生，形成了多层次的科研梯队，营造了协作创新的学术氛围。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
             <div class="row g-4 align-items-stretch">
                 <!-- 团队成员1 -->
                 <div class="col-lg-3 col-md-6">
                     <div class="member-card">
-                        <img src="{{ url_for('static', filename='images/member1.jpg') }}" alt="教授" class="member-photo">
-                        <h4 class="member-name">文明教授</h4>
+                        <img src="{{ url_for('static', filename='images/member1.png') }}" alt="教授" class="member-photo">
+                        <h4 class="member-name">文明副教授</h4>
                         <p class="member-role">指导老师</p>
                         <p class="member-bio">
                             华中科技大学网络空间安全学院副教授、博士生导师，领导ARTS^3研究小组，聚焦系统软件安全前沿研究。主要研究方向包括代码大模型安全、软件测试与分析、程序缺陷漏洞的检测、定位与修复等
