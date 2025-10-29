@@ -441,17 +441,18 @@ const javaToolsData = {
 
 // 绿色系配色配置
 const chartColors = {
-    // 绿色系基础色 - 由深到浅
-    darkGreen: 'rgba(0, 100, 0, 0.8)',      // 深绿色
-    mediumDarkGreen: 'rgba(34, 139, 34, 0.8)', // 中深绿色
-    mediumGreen: 'rgba(60, 179, 113, 0.8)',   // 中绿色
-    lightGreen: 'rgba(144, 238, 144, 0.8)',    // 浅绿色
+    // 指定颜色配置
+    fnrColor: 'rgba(0, 128, 128, 0.8)',      // #008080 - 深青色 - FNR（漏报率）
+    mediumDarkGreen: 'rgba(64, 160, 160, 0.8)', // #40A0A0 - 中深青色
+    fprColor: 'rgba(128, 192, 192, 0.8)',     // #80C0C0 - 中青色 - FPR（误报率）
+    gcColor: 'rgba(224, 240, 240, 0.8)',      // #E0F0F0 - 浅青色 - GC总数
     white: 'rgba(255, 255, 255, 0.8)',
     
     // 边框色 - 对应绿色系
-    borderDarkGreen: 'rgba(0, 100, 0, 1)',
-    borderMediumGreen: 'rgba(60, 179, 113, 1)',
-    borderLightGreen: 'rgba(144, 238, 144, 1)'
+    borderFnr: 'rgba(0, 128, 128, 1)',
+    borderMediumDarkGreen: 'rgba(64, 160, 160, 1)',
+    borderFpr: 'rgba(128, 192, 192, 1)',
+    borderGc: 'rgba(224, 240, 240, 1)'
 };
 
 // 花纹图案定义和图案生成器
@@ -554,8 +555,8 @@ function initJavaToolsChart() {
             {
                 label: 'FNR（漏报率）',
                 data: javaToolsData.tools.map(tool => javaToolsData.data[tool].FNR),
-                backgroundColor: chartColors.darkGreen, // 深绿色
-                borderColor: 'rgba(0, 100, 0, 1)',
+                backgroundColor: chartColors.fnrColor, // #008080 - FNR
+                borderColor: chartColors.borderFnr,
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y'  // 使用左侧Y轴
@@ -563,8 +564,8 @@ function initJavaToolsChart() {
             {
                 label: 'FPR（误报率）',
                 data: javaToolsData.tools.map(tool => javaToolsData.data[tool].FPR),
-                backgroundColor: chartColors.mediumDarkGreen, // 中深绿色
-                borderColor: 'rgba(34, 139, 34, 1)',
+                backgroundColor: chartColors.fprColor, // #80C0C0 - FPR
+                borderColor: chartColors.borderFpr,
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y'  // 使用左侧Y轴
@@ -572,8 +573,8 @@ function initJavaToolsChart() {
             {
                 label: 'GC总数',
                 data: javaToolsData.tools.map(tool => javaToolsData.data[tool]['GC总数']),
-                backgroundColor: chartColors.mediumGreen, // 中绿色
-                borderColor: chartColors.borderMediumGreen,
+                backgroundColor: chartColors.gcColor, // #E0F0F0 - GC总数
+                borderColor: chartColors.borderGc,
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y1'  // 使用右侧Y轴
@@ -655,6 +656,7 @@ function initJavaToolsChart() {
                 },
                 y: {
                     beginAtZero: true,
+                    max: 1, 
                     grid: {
                         color: 'rgba(0, 0, 0, 0.1)'
                     },
@@ -729,8 +731,8 @@ function initPhpToolsChart() {
             {
                 label: 'FNR（漏报率）',
                 data: phpToolsData.tools.map(tool => phpToolsData.data[tool].FNR),
-                backgroundColor: chartColors.darkGreen, // 深绿色
-                borderColor: 'rgba(0, 100, 0, 1)',
+                backgroundColor: chartColors.fnrColor, // #008080 - FNR
+                borderColor: chartColors.borderFnr,
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y'
@@ -738,8 +740,8 @@ function initPhpToolsChart() {
             {
                 label: 'FPR（误报率）',
                 data: phpToolsData.tools.map(tool => phpToolsData.data[tool].FPR),
-                backgroundColor: chartColors.mediumDarkGreen, // 中深绿色
-                borderColor: 'rgba(34, 139, 34, 1)',
+                backgroundColor: chartColors.fprColor, // #80C0C0 - FPR
+                borderColor: chartColors.borderFpr,
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y'
@@ -747,8 +749,8 @@ function initPhpToolsChart() {
             {
                 label: 'GC总数',
                 data: phpToolsData.tools.map(tool => phpToolsData.data[tool]['GC总数']),
-                backgroundColor: chartColors.mediumGreen, // 中绿色
-                borderColor: chartColors.borderMediumGreen,
+                backgroundColor: chartColors.gcColor, // #E0F0F0 - GC总数
+                borderColor: chartColors.borderGc,
                 borderWidth: 2,
                 borderRadius: 4,
                 yAxisID: 'y1'
@@ -821,6 +823,7 @@ function initPhpToolsChart() {
                 },
                 y: {
                     beginAtZero: true,
+                    max: 1, 
                     grid: { color: 'rgba(0, 0, 0, 0.1)' },
                     title: { 
                         display: true, 
@@ -862,10 +865,10 @@ const javaPieData = {
         'FLASH': 128
     },
     colors: [
-        chartColors.darkGreen,           // 深绿色 - TABBY
-        chartColors.mediumDarkGreen,     // 中深绿色 - CRYSTALLIZER
-        chartColors.mediumGreen,         // 中绿色 - JDD
-        chartColors.lightGreen          // 浅绿色 - FLASH
+        chartColors.fnrColor,           // #008080 - 深青色 - TABBY
+        chartColors.mediumDarkGreen,    // #40A0A0 - 中深青色 - CRYSTALLIZER
+        chartColors.fprColor,           // #80C0C0 - 中青色 - JDD
+        chartColors.gcColor             // #E0F0F0 - 浅青色 - FLASH
     ]
 };
 
@@ -936,8 +939,8 @@ const phpPieData = {
         'PFORTIFIER': 92
     },
     colors: [
-        chartColors.darkGreen,           // 深绿色 - FUGIO
-        chartColors.mediumGreen         // 中绿色 - PFORTIFIER
+        chartColors.fnrColor,           // #008080 - 深青色 - FUGIO
+        chartColors.mediumDarkGreen     // #40A0A0 - 中深青色 - PFORTIFIER
     ]
 };
 
@@ -985,7 +988,7 @@ function initPhpPieChart() {
                 },
                 datalabels: {
                     display: true,
-                    color: '#fff',
+                    color: '#000',
                     font: {
                         weight: 'bold',
                         size: 12
